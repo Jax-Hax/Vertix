@@ -1,4 +1,4 @@
-use tutorial9_models::run;
+use marblemania::run;
 
 fn main() {
     pollster::block_on(run());
