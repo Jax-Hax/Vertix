@@ -12,12 +12,17 @@ This is the engine I am using for my graphics programs, like an upcoming machine
 - [ ] Normal Maps
 - [ ] Mesh Construction
 
+## How to use
+I didn't really use many outside resources when writing this, but I decided to make my own version of ECS I call ESCS (Entity, Species, Class, System). A species is like a traditional entity, then you can instantiate them with the new entity, which has a species, position, and rotation. This allows for instancing and faster rendering.
+
+
 ## Possible features
 - [ ] Terrain Generation
 - [ ] Compute Shaders
 - [ ] Shadows
 - [ ] Physics
 - [ ] ECS
+- [ ] Culling
 
 ## Things I wish I could implement
 - [ ] AI Pathfinding
