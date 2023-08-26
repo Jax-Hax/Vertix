@@ -1,6 +1,6 @@
 use std::iter;
 
-use cgmath::{prelude::*, Quaternion, Vector3};
+use cgmath::prelude::*;
 use wgpu::util::DeviceExt;
 use winit::{event::*, window::Window};
 
@@ -22,7 +22,6 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
     0.0, 0.0, 0.0, 1.0,
 );
 
-const NUM_INSTANCES_PER_ROW: u32 = 10;
 
 struct Camera {
     eye: cgmath::Point3<f32>,
@@ -159,9 +158,9 @@ impl CameraController {
     }
 }
 
-struct Instance {
-    position: cgmath::Vector3<f32>,
-    rotation: cgmath::Quaternion<f32>,
+pub struct Instance {
+    pub position: cgmath::Vector3<f32>,
+    pub rotation: cgmath::Quaternion<f32>,
 }
 
 impl Instance {
