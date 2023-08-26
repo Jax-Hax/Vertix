@@ -2,7 +2,12 @@ use std::iter;
 
 use cgmath::prelude::*;
 use wgpu::util::DeviceExt;
-use winit::{event::*, event_loop::EventLoop, window::Window};
+use winit::{
+    dpi::PhysicalSize,
+    event::*,
+    event_loop::EventLoop,
+    window::{Fullscreen, Window, WindowBuilder},
+};
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -130,18 +135,22 @@ impl State {
 
         let event_loop = EventLoop::new();
         let title = env!("CARGO_PKG_NAME");
-        let window = winit::window::WindowBuilder::new()
+        let monitor = event_loop.primary_monitor().unwrap();
+        let video_mode = monitor.video_modes().next();
+        let size = video_mode
+            .clone()
+            .map_or(PhysicalSize::new(800, 600), |vm| vm.size());
+        let window = WindowBuilder::new()
+            .with_visible(false)
             .with_title(title)
+            .with_fullscreen(video_mode.map(|vm| Fullscreen::Exclusive(vm)))
             .build(&event_loop)
             .unwrap();
-
+        if window.fullscreen().is_none() {
+            window.set_inner_size(PhysicalSize::new(512, 512));
+        }
         #[cfg(target_arch = "wasm32")]
         {
-            // Winit prevents sizing with CSS, so we have to set
-            // the size manually when on web.
-            use winit::dpi::PhysicalSize;
-            window.set_inner_size(PhysicalSize::new(450, 400));
-
             use winit::platform::web::WindowExtWebSys;
             web_sys::window()
                 .and_then(|win| win.document())
@@ -149,11 +158,17 @@ impl State {
                     let dst = doc.get_element_by_id("wasm-example")?;
                     let canvas = web_sys::Element::from(window.canvas());
                     dst.append_child(&canvas).ok()?;
+
+                    // Request fullscreen, if denied, continue as normal
+                    match canvas.request_fullscreen() {
+                        Ok(_) => {}
+                        Err(_) => (),
+                    }
+
                     Some(())
                 })
                 .expect("Couldn't append canvas to document body.");
         }
-        let size = window.inner_size();
 
         // The instance is a handle to our GPU
         // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
@@ -347,7 +362,7 @@ impl State {
             // indicates how many array layers the attachments will have.
             multiview: None,
         });
-
+        window.set_visible(true);
         (
             Self {
                 surface,
