@@ -1,6 +1,8 @@
 use winit::{event_loop::ControlFlow, event::{WindowEvent, VirtualKeyCode, ElementState, Event, KeyboardInput, DeviceEvent}};
 use cgmath::prelude::*;
 use crate::engine::{State, Instance};
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
 
 mod engine;
 mod model;
