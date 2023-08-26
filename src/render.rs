@@ -13,7 +13,7 @@ use wasm_bindgen::prelude::*;
 
 use model::{DrawModel, Vertex};
 
-use crate::{model, texture, resources};
+use crate::{model::{self, Model}, texture, resources};
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
@@ -228,7 +228,6 @@ pub struct State {
     config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
     render_pipeline: wgpu::RenderPipeline,
-    obj_model: model::Model,
     camera: Camera,
     camera_controller: CameraController,
     camera_uniform: CameraUniform,
@@ -239,6 +238,8 @@ pub struct State {
     instance_buffer: wgpu::Buffer,
     depth_texture: texture::Texture,
     window: Window,
+    models: Vec<Model>,
+    texture_bind_group_layout: wgpu::BindGroupLayout,
 }
 
 impl State {
@@ -408,11 +409,7 @@ impl State {
         });
 
         log::warn!("Load model");
-        let obj_model =
-            resources::load_model("cube.obj", &device, &queue, &texture_bind_group_layout)
-                .await
-                .unwrap();
-
+        let models: Vec<Model> = vec!();
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("shader.wgsl"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
@@ -485,7 +482,7 @@ impl State {
             config,
             size,
             render_pipeline,
-            obj_model,
+            models,
             camera,
             camera_controller,
             camera_buffer,
@@ -495,6 +492,7 @@ impl State {
             instance_buffer,
             depth_texture,
             window,
+            texture_bind_group_layout
         }
     }
 
@@ -526,7 +524,14 @@ impl State {
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
     }
+    pub async fn load_model(&mut self, model: &str){
+        let loaded_model =
+            resources::load_model(model, &self.device, &self.queue, &self.texture_bind_group_layout)
+                .await
+                .unwrap();
+        let _ = &self.models.push(loaded_model);
 
+    }
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -567,11 +572,13 @@ impl State {
 
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.draw_model_instanced(
-                &self.obj_model,
-                0..self.instances.len() as u32,
-                &self.camera_bind_group,
-            );
+            for model in &self.models{
+                render_pass.draw_model_instanced(
+                    model,
+                    0..self.instances.len() as u32,
+                    &self.camera_bind_group,
+                );
+            }
         }
 
         self.queue.submit(iter::once(encoder.finish()));

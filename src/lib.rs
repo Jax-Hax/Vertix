@@ -1,8 +1,8 @@
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{WindowEvent, VirtualKeyCode, ElementState, Event, KeyboardInput}};
 
-use crate::renderer::State;
+use crate::render::State;
 
-mod renderer;
+mod render;
 mod model;
 mod resources;
 mod texture;
@@ -45,6 +45,9 @@ pub async fn run() {
 
     // State::new uses async code, so we're going to wait for it to finish
     let mut state = State::new(window).await;
+
+    //add models
+    state.load_model("cube.obj").await;
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
