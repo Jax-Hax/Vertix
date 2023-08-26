@@ -48,7 +48,7 @@ pub async fn run() {
 
     //add models
     state.load_model("cube.obj").await;
-
+    let instance = Instance { position: positions[i], rotation: rotations[i] };
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
         match event {

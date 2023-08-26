@@ -1,19 +1,18 @@
 use std::iter;
 
-use cgmath::prelude::*;
+use cgmath::{prelude::*, Quaternion, Vector3};
 use wgpu::util::DeviceExt;
-use winit::{
-    event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::Window,
-};
+use winit::{event::*, window::Window};
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
 use model::{DrawModel, Vertex};
 
-use crate::{model::{self, Model}, texture, resources};
+use crate::{
+    model::{self, Model},
+    resources, texture,
+};
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
@@ -233,13 +232,10 @@ pub struct State {
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
-    instances: Vec<Instance>,
-    #[allow(dead_code)]
-    instance_buffer: wgpu::Buffer,
     depth_texture: texture::Texture,
     window: Window,
-    models: Vec<Model>,
     texture_bind_group_layout: wgpu::BindGroupLayout,
+    entities: Vec<(u32, wgpu::Buffer, Model)>,
 }
 
 impl State {
@@ -353,36 +349,7 @@ impl State {
             contents: bytemuck::cast_slice(&[camera_uniform]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
-        // make instances
-        const SPACE_BETWEEN: f32 = 3.0;
-        let instances = (0..NUM_INSTANCES_PER_ROW)
-            .flat_map(|z| {
-                (0..NUM_INSTANCES_PER_ROW).map(move |x| {
-                    let x = SPACE_BETWEEN * (x as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
-                    let z = SPACE_BETWEEN * (z as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
-
-                    let position = cgmath::Vector3 { x, y: 0.0, z };
-
-                    let rotation = if position.is_zero() {
-                        cgmath::Quaternion::from_axis_angle(
-                            cgmath::Vector3::unit_z(),
-                            cgmath::Deg(0.0),
-                        )
-                    } else {
-                        cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(45.0))
-                    };
-
-                    Instance { position, rotation }
-                })
-            })
-            .collect::<Vec<_>>();
-
-        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
-        let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Instance Buffer"),
-            contents: bytemuck::cast_slice(&instance_data),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
+        let entities: Vec<(u32, wgpu::Buffer, Model)> = vec![];
 
         let camera_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -409,7 +376,6 @@ impl State {
         });
 
         log::warn!("Load model");
-        let models: Vec<Model> = vec!();
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("shader.wgsl"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
@@ -482,17 +448,15 @@ impl State {
             config,
             size,
             render_pipeline,
-            models,
             camera,
             camera_controller,
             camera_buffer,
             camera_bind_group,
             camera_uniform,
-            instances,
-            instance_buffer,
             depth_texture,
             window,
-            texture_bind_group_layout
+            texture_bind_group_layout,
+            entities,
         }
     }
 
@@ -524,13 +488,25 @@ impl State {
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
     }
-    pub async fn load_model(&mut self, model: &str){
-        let loaded_model =
-            resources::load_model(model, &self.device, &self.queue, &self.texture_bind_group_layout)
-                .await
-                .unwrap();
-        let _ = &self.models.push(loaded_model);
-
+    pub async fn load_model(&mut self, model: &str, instances: Vec<Instance>) {
+        let loaded_model = resources::load_model(
+            model,
+            &self.device,
+            &self.queue,
+            &self.texture_bind_group_layout,
+        )
+        .await
+        .unwrap();
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        let instance_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Instance Buffer"),
+                contents: bytemuck::cast_slice(&instance_data),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let entity = (instances.len() as u32, instance_buffer, loaded_model);
+        let _ = &self.entities.push(entity);
     }
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
@@ -569,15 +545,10 @@ impl State {
                     stencil_ops: None,
                 }),
             });
-
-            render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
-            render_pass.set_pipeline(&self.render_pipeline);
-            for model in &self.models{
-                render_pass.draw_model_instanced(
-                    model,
-                    0..self.instances.len() as u32,
-                    &self.camera_bind_group,
-                );
+            for (length, instance_buffer, model) in &self.entities {
+                render_pass.set_vertex_buffer(1, instance_buffer.slice(..));
+                render_pass.set_pipeline(&self.render_pipeline);
+                render_pass.draw_model_instanced(model, 0..*length, &self.camera_bind_group);
             }
         }
 
