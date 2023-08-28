@@ -1,6 +1,6 @@
 use winit::{event_loop::ControlFlow, event::{WindowEvent, VirtualKeyCode, ElementState, Event, KeyboardInput, DeviceEvent}};
 use cgmath::prelude::*;
-use crate::engine::{State, Instance};
+use crate::{engine::{State, Instance}, model::Model};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -39,7 +39,9 @@ pub async fn run() {
                 })
             })
             .collect::<Vec<_>>();
-    state.load_model("cube.obj",instances).await;
+    let mut entities: Vec<(u32, wgpu::Buffer, Model, Vec<engine::Instance>)> = vec![];
+    let instances = state.load_model("cube.obj",instances).await;
+    entities.push(instances);
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
@@ -83,7 +85,12 @@ pub async fn run() {
                 let dt = now - last_render_time;
                 last_render_time = now;
                 state.update(dt);
-                match state.render() {
+                for i in 0..entities[0].3.len(){
+                    entities[0].3[i].position[0] += i as f32 * 0.01;
+                }
+                state.update_instances(&entities[0].3,&entities[0].1);
+
+                match state.render(&entities) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.size),

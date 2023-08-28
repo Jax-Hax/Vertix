@@ -1,7 +1,7 @@
 use std::iter;
 
 use cgmath::prelude::*;
-use wgpu::util::DeviceExt;
+use wgpu::{util::DeviceExt, Buffer};
 use winit::{
     dpi::PhysicalSize,
     event::*,
@@ -118,7 +118,6 @@ pub struct State {
     depth_texture: texture::Texture,
     window: Window,
     texture_bind_group_layout: wgpu::BindGroupLayout,
-    entities: Vec<(u32, wgpu::Buffer, Model)>,
     pub mouse_pressed: bool,
 }
 
@@ -271,7 +270,6 @@ impl State {
             contents: bytemuck::cast_slice(&[camera_uniform]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
-        let entities: Vec<(u32, wgpu::Buffer, Model)> = vec![];
 
         let camera_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -380,7 +378,6 @@ impl State {
                 depth_texture,
                 window,
                 texture_bind_group_layout,
-                entities,
                 mouse_pressed: false,
             },
             event_loop,
@@ -437,7 +434,15 @@ impl State {
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
     }
-    pub async fn load_model(&mut self, model: &str, instances: Vec<Instance>) {
+    pub fn update_instances(&mut self, instances: &Vec<Instance>, instance_buffer: &Buffer){
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        self.queue.write_buffer(
+            instance_buffer,
+            0,
+            bytemuck::cast_slice(&instance_data),
+        );
+    }
+    pub async fn load_model(&mut self, model: &str, instances: Vec<Instance>) -> (u32, wgpu::Buffer, model::Model,Vec<Instance>){
         let loaded_model = resources::load_model(
             model,
             &self.device,
@@ -452,12 +457,12 @@ impl State {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
                 contents: bytemuck::cast_slice(&instance_data),
-                usage: wgpu::BufferUsages::VERTEX,
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             });
-        let entity = (instances.len() as u32, instance_buffer, loaded_model);
-        let _ = &self.entities.push(entity);
+        let entity = (instances.len() as u32, instance_buffer, loaded_model, instances);
+        return entity;
     }
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self, entities: &Vec<(u32, wgpu::Buffer, model::Model,Vec<Instance>)>) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -494,7 +499,7 @@ impl State {
                     stencil_ops: None,
                 }),
             });
-            for (length, instance_buffer, model) in &self.entities {
+            for (length, instance_buffer, model,_) in entities {
                 render_pass.set_vertex_buffer(1, instance_buffer.slice(..));
                 render_pass.set_pipeline(&self.render_pipeline);
                 render_pass.draw_model_instanced(model, 0..*length, &self.camera_bind_group);
