@@ -44,7 +44,7 @@ pub struct InstanceContainer {
     length: u32,
     buffer: Buffer,
     model: Model,
-    instances: Vec<Instance>
+    pub instances: Vec<Instance>
 }
 impl InstanceContainer {
     fn new(buffer: Buffer, model: Model, instances: Vec<Instance>) -> Self{
@@ -449,9 +449,10 @@ impl State {
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
     }
-    pub fn update_instances(&mut self, container: &InstanceContainer){
-        //optional, must call after you change position or rotation to update it in buffer
+    pub fn update_instances(&mut self, container: &mut InstanceContainer){
+        //optional, must call after you change position or rotation to update it in buffer, also when you add an instance
         let instance_data = container.instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        container.length = container.instances.len() as u32;
         self.queue.write_buffer(
             &container.buffer,
             0,

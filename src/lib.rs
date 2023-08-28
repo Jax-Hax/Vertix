@@ -84,8 +84,11 @@ pub async fn run() {
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
+                for instance in &mut entities[0].instances {
+                    instance.position[0] += 0.01;
+                }
                 state.update(dt);
-                state.update_instances(&entities[0]);
+                state.update_instances(&mut entities[0]);
 
                 match state.render(&entities) {
                     Ok(_) => {}
