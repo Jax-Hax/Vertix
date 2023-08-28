@@ -1,6 +1,6 @@
 use winit::{event_loop::ControlFlow, event::{WindowEvent, VirtualKeyCode, ElementState, Event, KeyboardInput, DeviceEvent}};
 use cgmath::prelude::*;
-use crate::{engine::Instance, state::State};
+use crate::engine::{State, Instance};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -9,13 +9,12 @@ mod model;
 mod resources;
 mod texture;
 mod camera;
-mod state;
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
 
     // State::new uses async code, so we're going to wait for it to finish
-    let mut state = State::new().await;
-    let mut threeDimensional = engine::Renderer::new(state);
+    let (mut state,event_loop) = State::new().await;
+
     //add models
     const SPACE_BETWEEN: f32 = 3.0;
     const NUM_INSTANCES_PER_ROW: usize = 10;
