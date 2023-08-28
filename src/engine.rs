@@ -40,7 +40,22 @@ impl CameraUniform {
         self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
     }
 }
-
+pub struct InstanceContainer {
+    length: u32,
+    buffer: Buffer,
+    model: Model,
+    instances: Vec<Instance>
+}
+impl InstanceContainer {
+    fn new(buffer: Buffer, model: Model, instances: Vec<Instance>) -> Self{
+        Self {
+            buffer,
+            model,
+            length: instances.len() as u32,
+            instances,
+        }
+    }
+}
 pub struct Instance {
     pub position: cgmath::Vector3<f32>,
     pub rotation: cgmath::Quaternion<f32>,
@@ -434,15 +449,16 @@ impl State {
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
     }
-    pub fn update_instances(&mut self, instances: &Vec<Instance>, instance_buffer: &Buffer){
-        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+    pub fn update_instances(&mut self, container: &InstanceContainer){
+        //optional, must call after you change position or rotation to update it in buffer
+        let instance_data = container.instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         self.queue.write_buffer(
-            instance_buffer,
+            &container.buffer,
             0,
             bytemuck::cast_slice(&instance_data),
         );
     }
-    pub async fn load_model(&mut self, model: &str, instances: Vec<Instance>) -> (u32, wgpu::Buffer, model::Model,Vec<Instance>){
+    pub async fn create_dynamic_instances(&mut self, model: &str, instances: Vec<Instance>) -> InstanceContainer{
         let loaded_model = resources::load_model(
             model,
             &self.device,
@@ -459,10 +475,10 @@ impl State {
                 contents: bytemuck::cast_slice(&instance_data),
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             });
-        let entity = (instances.len() as u32, instance_buffer, loaded_model, instances);
-        return entity;
+        let container = InstanceContainer::new(instance_buffer, loaded_model, instances);
+        return container;
     }
-    pub fn render(&mut self, entities: &Vec<(u32, wgpu::Buffer, model::Model,Vec<Instance>)>) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self, entities: &Vec<InstanceContainer>) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -499,10 +515,10 @@ impl State {
                     stencil_ops: None,
                 }),
             });
-            for (length, instance_buffer, model,_) in entities {
-                render_pass.set_vertex_buffer(1, instance_buffer.slice(..));
+            for container in entities {
+                render_pass.set_vertex_buffer(1, container.buffer.slice(..));
                 render_pass.set_pipeline(&self.render_pipeline);
-                render_pass.draw_model_instanced(model, 0..*length, &self.camera_bind_group);
+                render_pass.draw_model_instanced(&container.model, 0..container.length, &self.camera_bind_group);
             }
         }
 

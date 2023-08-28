@@ -1,6 +1,6 @@
 use winit::{event_loop::ControlFlow, event::{WindowEvent, VirtualKeyCode, ElementState, Event, KeyboardInput, DeviceEvent}};
 use cgmath::prelude::*;
-use crate::{engine::{State, Instance}, model::Model};
+use crate::engine::{State, Instance, InstanceContainer};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -39,8 +39,8 @@ pub async fn run() {
                 })
             })
             .collect::<Vec<_>>();
-    let mut entities: Vec<(u32, wgpu::Buffer, Model, Vec<engine::Instance>)> = vec![];
-    let instances = state.load_model("cube.obj",instances).await;
+    let mut entities: Vec<InstanceContainer> = vec![];
+    let instances = state.create_dynamic_instances("cube.obj",instances).await;
     entities.push(instances);
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
@@ -85,10 +85,7 @@ pub async fn run() {
                 let dt = now - last_render_time;
                 last_render_time = now;
                 state.update(dt);
-                for i in 0..entities[0].3.len(){
-                    entities[0].3[i].position[0] += i as f32 * 0.01;
-                }
-                state.update_instances(&entities[0].3,&entities[0].1);
+                state.update_instances(&entities[0]);
 
                 match state.render(&entities) {
                     Ok(_) => {}
