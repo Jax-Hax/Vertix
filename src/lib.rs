@@ -88,7 +88,7 @@ pub async fn run() {
                     instance.position[0] += 0.01;
                 }
                 state.update(dt);
-                state.update_instances(&mut entities[0]);
+                state.update_instances(&entities[0]);
 
                 match state.render(&entities) {
                     Ok(_) => {}
