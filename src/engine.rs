@@ -44,10 +44,10 @@ pub struct InstanceContainer {
     length: u32,
     buffer: Buffer,
     model: Model,
-    pub instances: Vec<Instance>
+    pub instances: Vec<Instance>,
 }
 impl InstanceContainer {
-    fn new(buffer: Buffer, model: Model, instances: Vec<Instance>) -> Self{
+    fn new(buffer: Buffer, model: Model, instances: Vec<Instance>) -> Self {
         Self {
             buffer,
             model,
@@ -137,7 +137,7 @@ pub struct State {
 }
 
 impl State {
-    pub async fn new() -> (Self, EventLoop<()>) {
+    pub async fn new(mouse_lock: bool) -> (Self, EventLoop<()>) {
         cfg_if::cfg_if! {
             if #[cfg(target_arch = "wasm32")] {
                 std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -148,21 +148,23 @@ impl State {
         }
 
         let event_loop = EventLoop::new();
-        let title = env!("CARGO_PKG_NAME");
         let monitor = event_loop.primary_monitor().unwrap();
         let video_mode = monitor.video_modes().next();
         let size = video_mode
             .clone()
             .map_or(PhysicalSize::new(800, 600), |vm| vm.size());
         let window = WindowBuilder::new()
-            .with_visible(false)
-            .with_title(title)
+            .with_title("WGPUCraft")
             .with_fullscreen(video_mode.map(|vm| Fullscreen::Exclusive(vm)))
             .build(&event_loop)
             .unwrap();
+
         if window.fullscreen().is_none() {
             window.set_inner_size(PhysicalSize::new(512, 512));
         }
+
+        window.set_cursor_visible(false);
+
         #[cfg(target_arch = "wasm32")]
         {
             use winit::platform::web::WindowExtWebSys;
@@ -178,6 +180,23 @@ impl State {
                         Ok(_) => {}
                         Err(_) => (),
                     }
+                    let canvas_two = canvas.clone();
+                    let closure = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+                        // Request pointer lock
+                        canvas_two.request_pointer_lock();
+
+                        // Handle other mouse events here
+                    }) as Box<dyn FnMut(_)>);
+
+                    // Attach the event handler to the canvas
+                    canvas
+                        .add_event_listener_with_callback(
+                            "mousedown",
+                            closure.as_ref().unchecked_ref(),
+                        )
+                        .expect("Failed to add event listener");
+
+                    closure.forget();
 
                     Some(())
                 })
@@ -197,6 +216,27 @@ impl State {
         // The surface needs to live as long as the window that created it.
         // State owns the window so this should be safe.
         let surface = unsafe { instance.create_surface(&window) }.unwrap();
+        window.set_visible(true);
+        if mouse_lock {
+            #[cfg(any(target_arch = "wasm32", target_os = "macos"))]
+            {
+                match window.set_cursor_grab(winit::window::CursorGrabMode::Locked) {
+                    Ok(()) => {}
+                    Err(error) => {
+                        println!("Error occurred: {:?}", error);
+                    }
+                }
+            }
+            #[cfg(not(any(target_arch = "wasm32", target_os = "macos")))]
+            {
+                match window.set_cursor_grab(winit::window::CursorGrabMode::Confined) {
+                    Ok(()) => {}
+                    Err(error) => {
+                        println!("Error occurred: {:?}", error);
+                    }
+                }
+            }
+        }
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -449,16 +489,21 @@ impl State {
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
     }
-    pub fn update_instances(&mut self, container: &InstanceContainer){
+    pub fn update_instances(&mut self, container: &InstanceContainer) {
         //optional, must call after you change position or rotation to update it in buffer, also when you add an instance
-        let instance_data = container.instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
-        self.queue.write_buffer(
-            &container.buffer,
-            0,
-            bytemuck::cast_slice(&instance_data),
-        );
+        let instance_data = container
+            .instances
+            .iter()
+            .map(Instance::to_raw)
+            .collect::<Vec<_>>();
+        self.queue
+            .write_buffer(&container.buffer, 0, bytemuck::cast_slice(&instance_data));
     }
-    pub async fn create_dynamic_instances(&mut self, model: &str, instances: Vec<Instance>) -> InstanceContainer{
+    pub async fn create_dynamic_instances(
+        &mut self,
+        model: &str,
+        instances: Vec<Instance>,
+    ) -> InstanceContainer {
         let loaded_model = resources::load_model(
             model,
             &self.device,
@@ -518,7 +563,11 @@ impl State {
             for container in entities {
                 render_pass.set_vertex_buffer(1, container.buffer.slice(..));
                 render_pass.set_pipeline(&self.render_pipeline);
-                render_pass.draw_model_instanced(&container.model, 0..container.length, &self.camera_bind_group);
+                render_pass.draw_model_instanced(
+                    &container.model,
+                    0..container.length,
+                    &self.camera_bind_group,
+                );
             }
         }
 
