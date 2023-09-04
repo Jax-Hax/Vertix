@@ -40,6 +40,10 @@ impl CameraUniform {
         self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
     }
 }
+pub enum GameObject {
+    Model(InstanceContainer),
+    ScreenSpaceUI(),
+}
 pub struct InstanceContainer {
     length: u32,
     buffer: Buffer,
@@ -134,6 +138,7 @@ pub struct State {
     window: Window,
     texture_bind_group_layout: wgpu::BindGroupLayout,
     pub mouse_pressed: bool,
+    pub mouse_locked: bool,
 }
 
 impl State {
@@ -180,14 +185,16 @@ impl State {
                         Ok(_) => {}
                         Err(_) => (),
                     }
-                    let canvas_two = canvas.clone();
-                    let closure = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
-                        // Request pointer lock
-                        canvas_two.request_pointer_lock();
+                    if mouse_lock {
+                        let canvas_two = canvas.clone();
+                        let closure = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+                            // Request pointer lock
+                            canvas_two.request_pointer_lock();
 
-                        // Handle other mouse events here
-                    }) as Box<dyn FnMut(_)>);
-
+                            // Handle other mouse events here
+                        })
+                            as Box<dyn FnMut(_)>);
+                    }
                     // Attach the event handler to the canvas
                     canvas
                         .add_event_listener_with_callback(
@@ -312,6 +319,7 @@ impl State {
                 label: Some("texture_bind_group_layout"),
             });
 
+        //camera
         let camera = camera::Camera::new((0.0, 5.0, 10.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
         let projection =
             camera::Projection::new(config.width, config.height, cgmath::Deg(45.0), 0.1, 100.0);
@@ -350,6 +358,7 @@ impl State {
             label: Some("camera_bind_group"),
         });
 
+        //shader
         log::warn!("Load model");
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("shader.wgsl"),
@@ -434,6 +443,7 @@ impl State {
                 window,
                 texture_bind_group_layout,
                 mouse_pressed: false,
+                mouse_locked: mouse_lock,
             },
             event_loop,
         )
@@ -503,7 +513,7 @@ impl State {
         &mut self,
         model: &str,
         instances: Vec<Instance>,
-    ) -> InstanceContainer {
+    ) -> GameObject {
         let loaded_model = resources::load_model(
             model,
             &self.device,
@@ -521,9 +531,33 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             });
         let container = InstanceContainer::new(instance_buffer, loaded_model, instances);
-        return container;
+        return GameObject::Model(container);
     }
-    pub fn render(&mut self, entities: &Vec<InstanceContainer>) -> Result<(), wgpu::SurfaceError> {
+    pub async fn create_static_instances(
+        &mut self,
+        model: &str,
+        instances: Vec<Instance>,
+    ) -> GameObject {
+        let loaded_model = resources::load_model(
+            model,
+            &self.device,
+            &self.queue,
+            &self.texture_bind_group_layout,
+        )
+        .await
+        .unwrap();
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        let instance_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Instance Buffer"),
+                contents: bytemuck::cast_slice(&instance_data),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let container = InstanceContainer::new(instance_buffer, loaded_model, instances);
+        return GameObject::Model(container);
+    }
+    pub fn render(&mut self, entities: &Vec<GameObject>) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -560,14 +594,20 @@ impl State {
                     stencil_ops: None,
                 }),
             });
-            for container in entities {
-                render_pass.set_vertex_buffer(1, container.buffer.slice(..));
-                render_pass.set_pipeline(&self.render_pipeline);
-                render_pass.draw_model_instanced(
-                    &container.model,
-                    0..container.length,
-                    &self.camera_bind_group,
-                );
+            render_pass.set_pipeline(&self.render_pipeline);
+            for game_object in entities {
+                match game_object {
+                    GameObject::Model(container) => {
+                        render_pass.set_vertex_buffer(1, container.buffer.slice(..));
+
+                        render_pass.draw_model_instanced(
+                            &container.model,
+                            0..container.length,
+                            &self.camera_bind_group,
+                        );
+                    }
+                    GameObject::ScreenSpaceUI() => {}
+                }
             }
         }
 

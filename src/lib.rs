@@ -1,4 +1,4 @@
-use crate::engine::{Instance, InstanceContainer, State};
+use crate::engine::{GameObject, Instance, InstanceContainer, State};
 use cgmath::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -15,7 +15,7 @@ mod texture;
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
-    let (mut state, event_loop) = State::new(false).await;
+    let (mut state, event_loop) = State::new(true).await;
 
     //add models
     const SPACE_BETWEEN: f32 = 3.0;
@@ -38,7 +38,7 @@ pub async fn run() {
             })
         })
         .collect::<Vec<_>>();
-    let mut entities: Vec<InstanceContainer> = vec![];
+    let mut entities = vec![];
     let instances = state.create_dynamic_instances("cube.obj", instances).await;
     entities.push(instances);
 
@@ -52,7 +52,7 @@ pub async fn run() {
             Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
-            } => if state.mouse_pressed {
+            } => if state.mouse_pressed || state.mouse_locked {
                 state.camera_controller.process_mouse(delta.0, delta.1)
             }
             // UPDATED!
@@ -85,11 +85,11 @@ pub async fn run() {
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                for instance in &mut entities[0].instances {
+                /*for instance in &mut entities[0].instances {
                     instance.position[0] += 0.01;
-                }
+                }*/
                 state.update(dt);
-                state.update_instances(&entities[0]);
+                //state.update_instances(&entities[0]);
 
                 match state.render(&entities) {
                     Ok(_) => {}
@@ -105,4 +105,3 @@ pub async fn run() {
         }
     });
 }
-
