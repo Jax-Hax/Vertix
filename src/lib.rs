@@ -1,4 +1,4 @@
-use crate::engine::{GameObject, Instance, InstanceContainer, State};
+use crate::{engine::Instance, state::State};
 use cgmath::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -12,6 +12,7 @@ mod engine;
 mod model;
 mod resources;
 mod texture;
+mod state;
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish

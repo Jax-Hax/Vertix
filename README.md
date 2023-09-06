@@ -3,7 +3,7 @@ This is the engine I am using for my graphics programs, like an upcoming machine
 
 ## Features
 - [x] GPU Rendering
-- [ ] Model Loading
+- [x] Model Loading
 - [ ] Textures
 - [ ] Instances
 - [ ] UI
