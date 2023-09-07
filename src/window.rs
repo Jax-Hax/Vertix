@@ -1,14 +1,17 @@
 use wgpu::{Adapter, Surface};
-use winit::{event_loop::EventLoop, window::{Fullscreen, WindowBuilder}, dpi::PhysicalSize};
+use winit::{
+    dpi::PhysicalSize,
+    event_loop::EventLoop,
+    window::{Fullscreen, WindowBuilder},
+};
 pub struct Window {
     pub window: winit::window::Window,
     pub size: PhysicalSize<u32>,
     pub adapter: Adapter,
     pub surface: Surface,
 }
-impl Window{
-
-    pub async fn new(mouse_lock: bool) -> (Self,EventLoop<()>){
+impl Window {
+    pub async fn new(mouse_lock: bool) -> (Self, EventLoop<()>) {
         cfg_if::cfg_if! {
             if #[cfg(target_arch = "wasm32")] {
                 std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -17,7 +20,7 @@ impl Window{
                 env_logger::init();
             }
         }
-    
+
         let event_loop = EventLoop::new();
         let monitor = event_loop.primary_monitor().unwrap();
         let video_mode = monitor.video_modes().next();
@@ -29,14 +32,14 @@ impl Window{
             .with_fullscreen(video_mode.map(|vm| Fullscreen::Exclusive(vm)))
             .build(&event_loop)
             .unwrap();
-    
+
         if window.fullscreen().is_none() {
             window.set_inner_size(PhysicalSize::new(512, 512));
         }
-        if mouse_lock{
+        if mouse_lock {
             window.set_cursor_visible(false);
         }
-    
+        window.set_visible(true);
         #[cfg(target_arch = "wasm32")]
         {
             use winit::platform::web::WindowExtWebSys;
@@ -46,7 +49,7 @@ impl Window{
                     let dst = doc.get_element_by_id("wasm-example")?;
                     let canvas = web_sys::Element::from(window.canvas());
                     dst.append_child(&canvas).ok()?;
-    
+
                     // Request fullscreen, if denied, continue as normal
                     match canvas.request_fullscreen() {
                         Ok(_) => {}
@@ -57,7 +60,7 @@ impl Window{
                         let closure = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
                             // Request pointer lock
                             canvas_two.request_pointer_lock();
-    
+
                             // Handle other mouse events here
                         })
                             as Box<dyn FnMut(_)>);
@@ -69,14 +72,14 @@ impl Window{
                             closure.as_ref().unchecked_ref(),
                         )
                         .expect("Failed to add event listener");
-    
+
                     closure.forget();
-    
+
                     Some(())
                 })
                 .expect("Couldn't append canvas to document body.");
         }
-    
+
         // The instance is a handle to our GPU
         // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
         log::warn!("WGPU setup");
@@ -84,7 +87,7 @@ impl Window{
             backends: wgpu::Backends::all(),
             dx12_shader_compiler: Default::default(),
         });
-    
+
         // # Safety
         //
         // The surface needs to live as long as the window that created it.
@@ -111,7 +114,7 @@ impl Window{
                 }
             }
         }
-    
+
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
@@ -121,12 +124,14 @@ impl Window{
             .await
             .unwrap();
         log::warn!("device and queue");
-        (Self {
-            window,
-            size,
-            adapter,
-            surface,
-        },
-        event_loop)
+        (
+            Self {
+                window,
+                size,
+                adapter,
+                surface,
+            },
+            event_loop,
+        )
     }
 }

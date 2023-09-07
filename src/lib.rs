@@ -1,5 +1,6 @@
-use crate::{engine::Instance, state::State};
+use crate::{engine::Instance, state::{State, run_event_loop}};
 use cgmath::prelude::*;
+use engine::GameObject;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 use winit::{
@@ -45,65 +46,8 @@ pub async fn run() {
     entities.push(instances);
 
     //render loop
-    let mut last_render_time = instant::Instant::now();
-    event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Poll;
-        match event {
-            Event::MainEventsCleared => state.window().request_redraw(),
-            // NEW!
-            Event::DeviceEvent {
-                event: DeviceEvent::MouseMotion{ delta, },
-                .. // We're not using device_id currently
-            } => if state.mouse_pressed || state.mouse_locked {
-                state.camera_controller.process_mouse(delta.0, delta.1)
-            }
-            // UPDATED!
-            Event::WindowEvent {
-                ref event,
-                window_id,
-            } if window_id == state.window().id() && !state.input(event) => {
-                match event {
-                    #[cfg(not(target_arch="wasm32"))]
-                    WindowEvent::CloseRequested
-                    | WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            },
-                        ..
-                    } => *control_flow = ControlFlow::Exit,
-                    WindowEvent::Resized(physical_size) => {
-                        state.resize(*physical_size);
-                    }
-                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                        state.resize(**new_inner_size);
-                    }
-                    _ => {}
-                }
-            }
-            Event::RedrawRequested(window_id) if window_id == state.window().id() => {
-                let now = instant::Instant::now();
-                let dt = now - last_render_time;
-                last_render_time = now;
-                /*for instance in &mut entities[0].instances {
-                    instance.position[0] += 0.01;
-                }*/
-                state.update(dt);
-                //state.update_instances(&entities[0]);
+    run_event_loop(state, event_loop, update, entities);
+}
+fn update(entities: &Vec<GameObject>) {
 
-                match state.render(&entities) {
-                    Ok(_) => {}
-                    // Reconfigure the surface if it's lost or outdated
-                    Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.window.size),
-                    // The system is out of memory, we should probably quit
-                    Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                    // We're ignoring timeouts
-                    Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
-                }
-            }
-            _ => {}
-        }
-    });
 }
