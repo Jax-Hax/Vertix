@@ -11,13 +11,14 @@ mod camera;
 mod engine;
 mod model;
 mod resources;
-mod texture;
 mod state;
+mod texture;
+mod window;
+mod shader;
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true).await;
-
     //add models
     const SPACE_BETWEEN: f32 = 3.0;
     const NUM_INSTANCES_PER_ROW: usize = 10;
@@ -95,7 +96,7 @@ pub async fn run() {
                 match state.render(&entities) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
-                    Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.size),
+                    Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.window.size),
                     // The system is out of memory, we should probably quit
                     Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                     // We're ignoring timeouts

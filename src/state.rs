@@ -1,16 +1,23 @@
 use std::iter;
 
 use wgpu::util::DeviceExt;
-use winit::{event::{ElementState, MouseButton, WindowEvent, KeyboardInput}, window::{Window, WindowBuilder, Fullscreen}, dpi::PhysicalSize, event_loop::EventLoop};
+use winit::{
+    event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
+    event_loop::EventLoop,
+    window::Window,
+};
 
-use crate::{model::{DrawModel, self, Vertex}, engine::{GameObject, Instance, InstanceContainer, InstanceRaw, CameraUniform}, resources, texture, camera};
+use crate::{
+    camera,
+    engine::{CameraUniform, GameObject, Instance, InstanceContainer},
+    model::DrawModel,
+    resources, shader, texture, window,
+};
 
 pub struct State {
-    surface: wgpu::Surface,
-    device: wgpu::Device,
+    pub device: wgpu::Device,
     queue: wgpu::Queue,
-    config: wgpu::SurfaceConfiguration,
-    pub size: winit::dpi::PhysicalSize<u32>,
+    pub config: wgpu::SurfaceConfiguration,
     render_pipeline: wgpu::RenderPipeline,
     camera: camera::Camera,
     projection: camera::Projection,
@@ -19,7 +26,7 @@ pub struct State {
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
     depth_texture: texture::Texture,
-    window: Window,
+    pub window: window::Window,
     texture_bind_group_layout: wgpu::BindGroupLayout,
     pub mouse_pressed: bool,
     pub mouse_locked: bool,
@@ -27,119 +34,9 @@ pub struct State {
 
 impl State {
     pub async fn new(mouse_lock: bool) -> (Self, EventLoop<()>) {
-        cfg_if::cfg_if! {
-            if #[cfg(target_arch = "wasm32")] {
-                std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-                console_log::init_with_level(log::Level::Warn).expect("Could't initialize logger");
-            } else {
-                env_logger::init();
-            }
-        }
-
-        let event_loop = EventLoop::new();
-        let monitor = event_loop.primary_monitor().unwrap();
-        let video_mode = monitor.video_modes().next();
-        let size = video_mode
-            .clone()
-            .map_or(PhysicalSize::new(800, 600), |vm| vm.size());
-        let window = WindowBuilder::new()
-            .with_title("WGPUCraft")
-            .with_fullscreen(video_mode.map(|vm| Fullscreen::Exclusive(vm)))
-            .build(&event_loop)
-            .unwrap();
-
-        if window.fullscreen().is_none() {
-            window.set_inner_size(PhysicalSize::new(512, 512));
-        }
-        if mouse_lock{
-            window.set_cursor_visible(false);
-        }
-
-        #[cfg(target_arch = "wasm32")]
-        {
-            use winit::platform::web::WindowExtWebSys;
-            web_sys::window()
-                .and_then(|win| win.document())
-                .and_then(|doc| {
-                    let dst = doc.get_element_by_id("wasm-example")?;
-                    let canvas = web_sys::Element::from(window.canvas());
-                    dst.append_child(&canvas).ok()?;
-
-                    // Request fullscreen, if denied, continue as normal
-                    match canvas.request_fullscreen() {
-                        Ok(_) => {}
-                        Err(_) => (),
-                    }
-                    if mouse_lock {
-                        let canvas_two = canvas.clone();
-                        let closure = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
-                            // Request pointer lock
-                            canvas_two.request_pointer_lock();
-
-                            // Handle other mouse events here
-                        })
-                            as Box<dyn FnMut(_)>);
-                    }
-                    // Attach the event handler to the canvas
-                    canvas
-                        .add_event_listener_with_callback(
-                            "mousedown",
-                            closure.as_ref().unchecked_ref(),
-                        )
-                        .expect("Failed to add event listener");
-
-                    closure.forget();
-
-                    Some(())
-                })
-                .expect("Couldn't append canvas to document body.");
-        }
-
-        // The instance is a handle to our GPU
-        // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
-        log::warn!("WGPU setup");
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::all(),
-            dx12_shader_compiler: Default::default(),
-        });
-
-        // # Safety
-        //
-        // The surface needs to live as long as the window that created it.
-        // State owns the window so this should be safe.
-        let surface = unsafe { instance.create_surface(&window) }.unwrap();
-        window.set_visible(true);
-        if mouse_lock {
-            #[cfg(any(target_arch = "wasm32", target_os = "macos"))]
-            {
-                match window.set_cursor_grab(winit::window::CursorGrabMode::Locked) {
-                    Ok(()) => {}
-                    Err(error) => {
-                        println!("Error occurred: {:?}", error);
-                    }
-                }
-            }
-            #[cfg(not(any(target_arch = "wasm32", target_os = "macos")))]
-            {
-                match window.set_cursor_grab(winit::window::CursorGrabMode::Confined) {
-                    Ok(()) => {}
-                    Err(error) => {
-                        println!("Error occurred: {:?}", error);
-                    }
-                }
-            }
-        }
-
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::default(),
-                compatible_surface: Some(&surface),
-                force_fallback_adapter: false,
-            })
-            .await
-            .unwrap();
-        log::warn!("device and queue");
-        let (device, queue) = adapter
+        let (window, event_loop) = window::Window::new(mouse_lock).await;
+        let (device, queue) = window
+            .adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
@@ -159,7 +56,7 @@ impl State {
             .unwrap();
 
         log::warn!("Surface");
-        let surface_caps = surface.get_capabilities(&adapter);
+        let surface_caps = window.surface.get_capabilities(&window.adapter);
         // Shader code in this tutorial assumes an Srgb surface texture. Using a different
         // one will result all the colors comming out darker. If you want to support non
         // Srgb surfaces, you'll need to account for that when drawing to the frame.
@@ -172,14 +69,14 @@ impl State {
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
-            width: size.width,
-            height: size.height,
+            width: window.size.width,
+            height: window.size.height,
             present_mode: surface_caps.present_modes[0],
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
         };
 
-        surface.configure(&device, &config);
+        window.surface.configure(&device, &config);
 
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -243,13 +140,6 @@ impl State {
             label: Some("camera_bind_group"),
         });
 
-        //shader
-        log::warn!("Load model");
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("shader.wgsl"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
-        });
-
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
 
@@ -260,63 +150,18 @@ impl State {
                 push_constant_ranges: &[],
             });
 
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "vs_main",
-                buffers: &[model::ModelVertex::desc(), InstanceRaw::desc()],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &shader,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::REPLACE,
-                        alpha: wgpu::BlendComponent::REPLACE,
-                    }),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
-                // Setting this to anything other than Fill requires Features::POLYGON_MODE_LINE
-                // or Features::POLYGON_MODE_POINT
-                polygon_mode: wgpu::PolygonMode::Fill,
-                // Requires Features::DEPTH_CLIP_CONTROL
-                unclipped_depth: false,
-                // Requires Features::CONSERVATIVE_RASTERIZATION
-                conservative: false,
-            },
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: texture::Texture::DEPTH_FORMAT,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
-                stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
-            }),
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            // If the pipeline will be used with a multiview render pass, this
-            // indicates how many array layers the attachments will have.
-            multiview: None,
-        });
-        window.set_visible(true);
+        let render_pipeline = shader::make_shader(
+            include_str!("shader.wgsl"),
+            &device,
+            render_pipeline_layout,
+            &config,
+        );
+        window.window.set_visible(true);
         (
             Self {
-                surface,
                 device,
                 queue,
                 config,
-                size,
                 render_pipeline,
                 camera,
                 projection,
@@ -334,16 +179,16 @@ impl State {
         )
     }
     pub fn window(&self) -> &Window {
-        &self.window
+        &self.window.window
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.projection.resize(new_size.width, new_size.height);
-            self.size = new_size;
+            self.window.size = new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
-            self.surface.configure(&self.device, &self.config);
+            self.window.surface.configure(&self.device, &self.config);
             self.depth_texture =
                 texture::Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
         }
@@ -443,7 +288,7 @@ impl State {
         return GameObject::StaticMesh(container);
     }
     pub fn render(&mut self, entities: &Vec<GameObject>) -> Result<(), wgpu::SurfaceError> {
-        let output = self.surface.get_current_texture()?;
+        let output = self.window.surface.get_current_texture()?;
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
