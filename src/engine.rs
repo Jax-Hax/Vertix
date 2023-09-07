@@ -7,8 +7,11 @@ use wasm_bindgen::prelude::*;
 use crate::
     model::Model
 ;
-
-pub enum GameObject {
+pub struct GameObject {
+    pub object_type: GameObjectType,
+    pub name: String
+}
+pub enum GameObjectType {
     StaticMesh(InstanceContainer),
     DynamicMesh(InstanceContainer),
     ScreenSpaceUI(),

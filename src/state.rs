@@ -11,7 +11,7 @@ use winit::{
 
 use crate::{
     camera::CameraStruct,
-    engine::{GameObject, Instance, InstanceContainer},
+    engine::{GameObject, Instance, InstanceContainer, GameObjectType},
     model::DrawModel,
     resources, shader, texture, window,
 };
@@ -204,6 +204,7 @@ impl State {
     pub async fn create_dynamic_instances(
         &mut self,
         model: &str,
+        name: &str,
         instances: Vec<Instance>,
     ) -> GameObject {
         let loaded_model = resources::load_model(
@@ -223,12 +224,13 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             });
         let container = InstanceContainer::new(instance_buffer, loaded_model, instances);
-        return GameObject::DynamicMesh(container);
+        return GameObject{object_type: GameObjectType::DynamicMesh(container), name: name.to_string()};
     }
     pub async fn create_static_instances(
         &mut self,
         model: &str,
         instances: Vec<Instance>,
+        name: &str,
     ) -> GameObject {
         let loaded_model = resources::load_model(
             model,
@@ -247,7 +249,7 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let container = InstanceContainer::new(instance_buffer, loaded_model, instances);
-        return GameObject::StaticMesh(container);
+        return GameObject{object_type: GameObjectType::StaticMesh(container), name: name.to_string()};
     }
     pub fn render(&mut self, entities: &Vec<GameObject>) -> Result<(), wgpu::SurfaceError> {
         let output = self.window.surface.get_current_texture()?;
@@ -288,8 +290,8 @@ impl State {
             });
             render_pass.set_pipeline(&self.render_pipeline);
             for game_object in entities {
-                match game_object {
-                    GameObject::DynamicMesh(container) | GameObject::StaticMesh(container) => {
+                match &game_object.object_type {
+                    GameObjectType::DynamicMesh(container) | GameObjectType::StaticMesh(container) => {
                         render_pass.set_vertex_buffer(1, container.buffer.slice(..));
 
                         render_pass.draw_model_instanced(
@@ -298,7 +300,7 @@ impl State {
                             &self.camera.bind_group,
                         );
                     }
-                    GameObject::ScreenSpaceUI() => {}
+                    GameObjectType::ScreenSpaceUI() => {}
                 }
             }
         }
@@ -312,12 +314,14 @@ impl State {
 pub fn run_event_loop(
     mut state: State,
     event_loop: EventLoop<()>,
-    update: fn(&Vec<GameObject>),
-    entities: Vec<GameObject>,
+    update: fn(&mut State, &mut Vec<GameObject>),
+    keyboard_input: fn(&mut State, &mut Vec<GameObject>, &winit::event::KeyboardInput),
+    mut entities: Vec<GameObject>,
 ) {
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
+        
         match event {
             Event::MainEventsCleared => state.window().request_redraw(),
             Event::DeviceEvent {
@@ -329,7 +333,8 @@ pub fn run_event_loop(
             Event::WindowEvent {
                 ref event,
                 window_id,
-            } if window_id == state.window().id() && !state.input(event) => {
+            } if window_id == state.window().id() => {
+                state.input(event);
                 match event {
                     #[cfg(not(target_arch="wasm32"))]
                     WindowEvent::CloseRequested
@@ -342,6 +347,9 @@ pub fn run_event_loop(
                             },
                         ..
                     } => *control_flow = ControlFlow::Exit,
+                    WindowEvent::KeyboardInput { input, .. } => {
+                        keyboard_input(&mut state, &mut entities, input);
+                    }
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);
                     }
@@ -355,12 +363,8 @@ pub fn run_event_loop(
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                /*for instance in &mut entities[0].instances {
-                    instance.position[0] += 0.01;
-                }*/
                 state.update(dt);
-                update(&entities);
-                //state.update_instances(&entities[0]);
+                update(&mut state, &mut entities);
 
                 match state.render(&entities) {
                     Ok(_) => {}

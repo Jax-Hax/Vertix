@@ -1,21 +1,21 @@
-use crate::{engine::Instance, state::{State, run_event_loop}};
+use crate::{
+    engine::Instance,
+    state::{run_event_loop, State},
+};
 use cgmath::prelude::*;
-use engine::GameObject;
+use engine::{GameObject, GameObjectType};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-use winit::{
-    event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
-    event_loop::ControlFlow,
-};
+use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 mod camera;
 mod engine;
 mod model;
 mod resources;
+mod shader;
 mod state;
 mod texture;
 mod window;
-mod shader;
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
@@ -42,12 +42,35 @@ pub async fn run() {
         })
         .collect::<Vec<_>>();
     let mut entities = vec![];
-    let instances = state.create_dynamic_instances("cube.obj", instances).await;
+    let instances = state
+        .create_dynamic_instances("cube.obj", "cube", instances)
+        .await;
     entities.push(instances);
 
     //render loop
-    run_event_loop(state, event_loop, update, entities);
+    run_event_loop(state, event_loop, update, keyboard_input, entities);
 }
-fn update(entities: &Vec<GameObject>) {
-
+fn update(state: &mut State, entities: &mut Vec<GameObject>) {
+    if let GameObjectType::DynamicMesh(ref mut instances) = &mut entities[0].object_type {
+        for instance in &mut instances.instances {
+            instance.position[0] += 0.01;
+        }
+        state.update_instances(&instances);
+    }
+}
+fn keyboard_input(state: &mut State, entities: &mut Vec<GameObject>, event: &KeyboardInput) {
+    //keyboard inputs
+    match event {
+        KeyboardInput {
+            state: ElementState::Pressed,
+            virtual_keycode: Some(VirtualKeyCode::F),
+            ..
+        } => if let GameObjectType::DynamicMesh(ref mut instances) = &mut entities[0].object_type {
+            for instance in &mut instances.instances {
+                instance.position[1] += 0.01;
+            }
+            state.update_instances(&instances);
+        },
+        _ => {}
+    }
 }
