@@ -9,11 +9,12 @@ use crate::
 ;
 pub struct GameObject {
     pub object_type: GameObjectType,
-    pub name: String
+    pub name: String,
+    pub transform: InstanceContainer,
 }
 pub enum GameObjectType {
-    StaticMesh(InstanceContainer),
-    DynamicMesh(InstanceContainer),
+    StaticMesh(),
+    DynamicMesh(),
     ScreenSpaceUI(),
 }
 pub struct InstanceContainer {

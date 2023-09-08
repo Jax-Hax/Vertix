@@ -6,7 +6,7 @@ use cgmath::prelude::*;
 use engine::{GameObject, GameObjectType};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event::{ElementState, KeyboardInput, VirtualKeyCode};
 
 mod camera;
 mod engine;
@@ -51,11 +51,11 @@ pub async fn run() {
     run_event_loop(state, event_loop, update, keyboard_input, entities);
 }
 fn update(state: &mut State, entities: &mut Vec<GameObject>) {
-    if let GameObjectType::DynamicMesh(ref mut instances) = &mut entities[0].object_type {
-        for instance in &mut instances.instances {
+    if let GameObjectType::DynamicMesh() = &mut entities[0].object_type {
+        for instance in &mut entities[0].transform.instances {
             instance.position[0] += 0.01;
         }
-        state.update_instances(&instances);
+        state.update_instances(&entities[0].transform);
     }
 }
 fn keyboard_input(state: &mut State, entities: &mut Vec<GameObject>, event: &KeyboardInput) {
@@ -65,11 +65,11 @@ fn keyboard_input(state: &mut State, entities: &mut Vec<GameObject>, event: &Key
             state: ElementState::Pressed,
             virtual_keycode: Some(VirtualKeyCode::F),
             ..
-        } => if let GameObjectType::DynamicMesh(ref mut instances) = &mut entities[0].object_type {
-            for instance in &mut instances.instances {
+        } => if let GameObjectType::DynamicMesh() = &mut entities[0].object_type {
+            for instance in &mut entities[0].transform.instances {
                 instance.position[1] += 0.01;
             }
-            state.update_instances(&instances);
+            state.update_instances(&entities[0].transform);
         },
         _ => {}
     }

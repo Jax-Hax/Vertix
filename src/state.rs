@@ -112,7 +112,7 @@ impl State {
             });
 
         let render_pipeline = shader::make_shader(
-            include_str!("shader.wgsl"),
+            include_str!("camera_shader.wgsl"),
             &device,
             render_pipeline_layout,
             &config,
@@ -224,7 +224,7 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             });
         let container = InstanceContainer::new(instance_buffer, loaded_model, instances);
-        return GameObject{object_type: GameObjectType::DynamicMesh(container), name: name.to_string()};
+        return GameObject{object_type: GameObjectType::DynamicMesh(), name: name.to_string(), transform: container};
     }
     pub async fn create_static_instances(
         &mut self,
@@ -249,7 +249,7 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let container = InstanceContainer::new(instance_buffer, loaded_model, instances);
-        return GameObject{object_type: GameObjectType::StaticMesh(container), name: name.to_string()};
+        return GameObject{object_type: GameObjectType::StaticMesh(), name: name.to_string(), transform: container};
     }
     pub fn render(&mut self, entities: &Vec<GameObject>) -> Result<(), wgpu::SurfaceError> {
         let output = self.window.surface.get_current_texture()?;
@@ -290,18 +290,13 @@ impl State {
             });
             render_pass.set_pipeline(&self.render_pipeline);
             for game_object in entities {
-                match &game_object.object_type {
-                    GameObjectType::DynamicMesh(container) | GameObjectType::StaticMesh(container) => {
-                        render_pass.set_vertex_buffer(1, container.buffer.slice(..));
+                render_pass.set_vertex_buffer(1, game_object.transform.buffer.slice(..));
 
-                        render_pass.draw_model_instanced(
-                            &container.model,
-                            0..container.length,
-                            &self.camera.bind_group,
-                        );
-                    }
-                    GameObjectType::ScreenSpaceUI() => {}
-                }
+                render_pass.draw_model_instanced(
+                    &game_object.transform.model,
+                    0..game_object.transform.length,
+                    &self.camera.bind_group,
+                );
             }
         }
 
