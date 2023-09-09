@@ -1,4 +1,4 @@
-use game_engine::run;
+use vertix::run;
 
 fn main() {
     pollster::block_on(run());
