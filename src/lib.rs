@@ -2,7 +2,6 @@ use crate::{
     engine::Instance,
     state::{run_event_loop, State},
 };
-use hecs::*;
 use cgmath::prelude::*;
 use engine::{InstanceContainer, IsDynamic};
 #[cfg(target_arch = "wasm32")]
