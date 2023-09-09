@@ -5,8 +5,8 @@ authors = ["Jax Bulbrook <jaxbulbrook@gmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2018"
 description = "A cross-platform performant ECS game engine"
-repository = "https://github.com/Jax-Hax/game-engine/"
-keywords = ["gamedev", "graphics","game engine"]
+repository = "https://github.com/Jax-Hax/Vertix/"
+keywords = ["gamedev", "graphics","game-engine"]
 categories = ["game-engines", "gui"]
 
 [lib]
