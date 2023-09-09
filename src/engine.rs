@@ -1,36 +1,45 @@
-use wgpu::Buffer;
+use wgpu::{Buffer, Queue};
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-
-use crate::
-    model::Model
-;
-pub struct GameObject {
-    pub object_type: GameObjectType,
-    pub name: String,
-    pub transform: InstanceContainer,
-}
-pub enum GameObjectType {
-    StaticMesh(),
-    DynamicMesh(),
-    ScreenSpaceUI(),
-}
+use crate::{model::Model, texture::Texture};
+pub struct IsDynamic;
+pub struct IsScreenSpace;
 pub struct InstanceContainer {
     pub length: u32,
     pub buffer: Buffer,
-    pub model: Model,
+    pub mesh_type: MeshType,
     pub instances: Vec<Instance>,
 }
+pub enum MeshType {
+    Model(Model),
+    Mesh(Mesh),
+}
+pub struct Mesh {
+    pub vertex_buffer: wgpu::Buffer,
+    pub index_buffer: wgpu::Buffer,
+    pub num_elements: u32,
+    pub diffuse_texture: Texture,
+    pub texture_bind_group: wgpu::BindGroup,
+}
 impl InstanceContainer {
-    pub fn new(buffer: Buffer, model: Model, instances: Vec<Instance>) -> Self {
+    pub fn new(buffer: Buffer, mesh_type: MeshType, instances: Vec<Instance>) -> Self {
         Self {
             buffer,
-            model,
+            mesh_type,
             length: instances.len() as u32,
             instances,
         }
+    }
+    pub fn update(&self, queue: &Queue) {
+        //optional, must call after you change position or rotation to update it in buffer, also when you add an instance
+        let instance_data = self
+            .instances
+            .iter()
+            .map(Instance::to_raw)
+            .collect::<Vec<_>>();
+        queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&instance_data));
     }
 }
 pub struct Instance {
@@ -93,5 +102,3 @@ impl InstanceRaw {
         }
     }
 }
-
-

@@ -2,8 +2,9 @@ use crate::{
     engine::Instance,
     state::{run_event_loop, State},
 };
+use hecs::*;
 use cgmath::prelude::*;
-use engine::{GameObject, GameObjectType};
+use engine::{InstanceContainer, IsDynamic};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode};
@@ -41,35 +42,35 @@ pub async fn run() {
             })
         })
         .collect::<Vec<_>>();
-    let mut entities = vec![];
-    let instances = state
-        .create_dynamic_instances("cube.obj", "cube", instances)
+    state
+        .create_dynamic_instances("cube.obj", instances)
         .await;
-    entities.push(instances);
 
     //render loop
-    run_event_loop(state, event_loop, update, keyboard_input, entities);
+    run_event_loop(state, event_loop, update, keyboard_input);
 }
-fn update(state: &mut State, entities: &mut Vec<GameObject>) {
-    if let GameObjectType::DynamicMesh() = &mut entities[0].object_type {
-        for instance in &mut entities[0].transform.instances {
-            instance.position[0] += 0.01;
+fn update(state: &mut State) {
+    for (_entity, (game_object, _)) in state.world.query_mut::<(&mut InstanceContainer, &IsDynamic)>() {
+        println!("yeah");
+        for instance in &mut game_object.instances {
+            instance.position[0] += 0.001;
         }
-        state.update_instances(&entities[0].transform);
+        game_object.update(&state.queue);
     }
 }
-fn keyboard_input(state: &mut State, entities: &mut Vec<GameObject>, event: &KeyboardInput) {
+fn keyboard_input(state: &mut State, event: &KeyboardInput) {
     //keyboard inputs
     match event {
         KeyboardInput {
             state: ElementState::Pressed,
             virtual_keycode: Some(VirtualKeyCode::F),
             ..
-        } => if let GameObjectType::DynamicMesh() = &mut entities[0].object_type {
-            for instance in &mut entities[0].transform.instances {
-                instance.position[1] += 0.01;
+        } => 
+        for (_entity, (game_object,_)) in state.world.query_mut::<(&mut InstanceContainer,&IsDynamic)>() {
+            for instance in &mut game_object.instances {
+                instance.position[1] += 0.001;
             }
-            state.update_instances(&entities[0].transform);
+            game_object.update(&state.queue);
         },
         _ => {}
     }

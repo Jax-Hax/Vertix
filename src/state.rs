@@ -1,5 +1,5 @@
 use std::iter;
-
+use hecs::World;
 use wgpu::util::DeviceExt;
 use winit::{
     event::{
@@ -11,14 +11,14 @@ use winit::{
 
 use crate::{
     camera::CameraStruct,
-    engine::{GameObject, Instance, InstanceContainer, GameObjectType},
+    engine::{Instance, InstanceContainer, MeshType, IsDynamic},
     model::DrawModel,
     resources, shader, texture, window,
 };
 
 pub struct State {
     pub device: wgpu::Device,
-    queue: wgpu::Queue,
+    pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     render_pipeline: wgpu::RenderPipeline,
     pub camera: CameraStruct,
@@ -27,6 +27,7 @@ pub struct State {
     texture_bind_group_layout: wgpu::BindGroupLayout,
     pub mouse_pressed: bool,
     pub mouse_locked: bool,
+    pub world: World,
 }
 
 impl State {
@@ -131,6 +132,7 @@ impl State {
                 texture_bind_group_layout,
                 mouse_pressed: false,
                 mouse_locked: mouse_lock,
+                world: World::new(),
             },
             event_loop,
         )
@@ -191,22 +193,11 @@ impl State {
             bytemuck::cast_slice(&[self.camera.camera_uniform]),
         );
     }
-    pub fn update_instances(&mut self, container: &InstanceContainer) {
-        //optional, must call after you change position or rotation to update it in buffer, also when you add an instance
-        let instance_data = container
-            .instances
-            .iter()
-            .map(Instance::to_raw)
-            .collect::<Vec<_>>();
-        self.queue
-            .write_buffer(&container.buffer, 0, bytemuck::cast_slice(&instance_data));
-    }
     pub async fn create_dynamic_instances(
         &mut self,
         model: &str,
-        name: &str,
         instances: Vec<Instance>,
-    ) -> GameObject {
+    ) {
         let loaded_model = resources::load_model(
             model,
             &self.device,
@@ -223,15 +214,14 @@ impl State {
                 contents: bytemuck::cast_slice(&instance_data),
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             });
-        let container = InstanceContainer::new(instance_buffer, loaded_model, instances);
-        return GameObject{object_type: GameObjectType::DynamicMesh(), name: name.to_string(), transform: container};
+        let container = InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
+        self.world.spawn((container,IsDynamic));
     }
     pub async fn create_static_instances(
         &mut self,
         model: &str,
         instances: Vec<Instance>,
-        name: &str,
-    ) -> GameObject {
+    ) {
         let loaded_model = resources::load_model(
             model,
             &self.device,
@@ -248,10 +238,10 @@ impl State {
                 contents: bytemuck::cast_slice(&instance_data),
                 usage: wgpu::BufferUsages::VERTEX,
             });
-        let container = InstanceContainer::new(instance_buffer, loaded_model, instances);
-        return GameObject{object_type: GameObjectType::StaticMesh(), name: name.to_string(), transform: container};
+        let container = InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
+        self.world.spawn((container,));
     }
-    pub fn render(&mut self, entities: &Vec<GameObject>) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.window.surface.get_current_texture()?;
         let view = output
             .texture
@@ -289,14 +279,18 @@ impl State {
                 }),
             });
             render_pass.set_pipeline(&self.render_pipeline);
-            for game_object in entities {
-                render_pass.set_vertex_buffer(1, game_object.transform.buffer.slice(..));
-
-                render_pass.draw_model_instanced(
-                    &game_object.transform.model,
-                    0..game_object.transform.length,
-                    &self.camera.bind_group,
-                );
+            for (_entity, (game_object,)) in self.world.query_mut::<(&InstanceContainer,)>() {
+                render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
+                match &game_object.mesh_type{
+                    MeshType::Model(model) => {
+                        render_pass.draw_model_instanced(
+                            &model,
+                            0..game_object.length,
+                            &self.camera.bind_group,
+                        );
+                    }
+                    MeshType::Mesh(mesh) => {}
+                }
             }
         }
 
@@ -309,9 +303,8 @@ impl State {
 pub fn run_event_loop(
     mut state: State,
     event_loop: EventLoop<()>,
-    update: fn(&mut State, &mut Vec<GameObject>),
-    keyboard_input: fn(&mut State, &mut Vec<GameObject>, &winit::event::KeyboardInput),
-    mut entities: Vec<GameObject>,
+    update: fn(&mut State),
+    keyboard_input: fn(&mut State, &winit::event::KeyboardInput),
 ) {
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
@@ -343,7 +336,7 @@ pub fn run_event_loop(
                         ..
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::KeyboardInput { input, .. } => {
-                        keyboard_input(&mut state, &mut entities, input);
+                        keyboard_input(&mut state, input);
                     }
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);
@@ -359,9 +352,9 @@ pub fn run_event_loop(
                 let dt = now - last_render_time;
                 last_render_time = now;
                 state.update(dt);
-                update(&mut state, &mut entities);
+                update(&mut state);
 
-                match state.render(&entities) {
+                match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.window.size),
