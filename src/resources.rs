@@ -17,7 +17,7 @@ fn format_url(file_name: &str) -> reqwest::Url {
     base.join(file_name).unwrap()
 }
 
-pub async fn load_string(file_name: &str) -> anyhow::Result<String> {
+pub async fn load_string(file_name: &str, build_path: &str) -> anyhow::Result<String> {
     cfg_if! {
         if #[cfg(target_arch = "wasm32")] {
             let url = format_url(file_name);
@@ -26,7 +26,7 @@ pub async fn load_string(file_name: &str) -> anyhow::Result<String> {
                 .text()
                 .await?;
         } else {
-            let path = std::path::Path::new(env!("OUT_DIR"))
+            let path = std::path::Path::new(build_path)
                 .join("res")
                 .join(file_name);
             let txt = std::fs::read_to_string(path)?;
@@ -36,7 +36,7 @@ pub async fn load_string(file_name: &str) -> anyhow::Result<String> {
     Ok(txt)
 }
 
-pub async fn load_binary(file_name: &str) -> anyhow::Result<Vec<u8>> {
+pub async fn load_binary(file_name: &str,build_path: &str) -> anyhow::Result<Vec<u8>> {
     cfg_if! {
         if #[cfg(target_arch = "wasm32")] {
             let url = format_url(file_name);
@@ -46,7 +46,7 @@ pub async fn load_binary(file_name: &str) -> anyhow::Result<Vec<u8>> {
                 .await?
                 .to_vec();
         } else {
-            let path = std::path::Path::new(env!("OUT_DIR"))
+            let path = std::path::Path::new(build_path)
                 .join("res")
                 .join(file_name);
             let data = std::fs::read(path)?;
@@ -58,20 +58,22 @@ pub async fn load_binary(file_name: &str) -> anyhow::Result<Vec<u8>> {
 
 pub async fn load_texture(
     file_name: &str,
+    build_path: &str,
     device: &wgpu::Device,
     queue: &wgpu::Queue,
 ) -> anyhow::Result<texture::Texture> {
-    let data = load_binary(file_name).await?;
+    let data = load_binary(file_name, build_path).await?;
     texture::Texture::from_bytes(device, queue, &data, file_name)
 }
 
 pub async fn load_model(
     file_name: &str,
+    build_path: &str,
     device: &wgpu::Device,
     queue: &wgpu::Queue,
     layout: &wgpu::BindGroupLayout,
 ) -> anyhow::Result<model::Model> {
-    let obj_text = load_string(file_name).await?;
+    let obj_text = load_string(file_name, build_path).await?;
     let obj_cursor = Cursor::new(obj_text);
     let mut obj_reader = BufReader::new(obj_cursor);
 
@@ -83,7 +85,7 @@ pub async fn load_model(
             ..Default::default()
         },
         |p| async move {
-            let mat_text = load_string(&p).await.unwrap();
+            let mat_text = load_string(&p, build_path).await.unwrap();
             tobj::load_mtl_buf(&mut BufReader::new(Cursor::new(mat_text)))
         },
     )
@@ -91,7 +93,7 @@ pub async fn load_model(
 
     let mut materials = Vec::new();
     for m in obj_materials? {
-        let diffuse_texture = load_texture(&m.diffuse_texture, device, queue).await?;
+        let diffuse_texture = load_texture(&m.diffuse_texture, build_path, device, queue).await?;
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout,
             entries: &[

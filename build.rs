@@ -5,12 +5,12 @@ use std::env;
 
 fn main() -> Result<()> {
     // This tells cargo to rerun this script if something in res/ changes.
-    println!("cargo:rerun-if-changed=res/*");
+    println!("cargo:rerun-if-changed=examples/res/*");
 
     // Prepare what to copy and how
     let mut copy_options = CopyOptions::new();
     copy_options.overwrite = true;
-    let paths_to_copy = vec!["res/"];
+    let paths_to_copy = vec!["examples/res/"];
 
     // Copy the items to the directory where the executable will be built
     let out_dir = env::var("OUT_DIR")?;

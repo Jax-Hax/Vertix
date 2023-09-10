@@ -5,7 +5,7 @@ fn main() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
-    let (mut state, event_loop) = State::new(true).await;
+    let (mut state, event_loop) = State::new(true,env!("OUT_DIR")).await;
     //add models
     const SPACE_BETWEEN: f32 = 3.0;
     const NUM_INSTANCES_PER_ROW: usize = 10;

@@ -11,9 +11,9 @@ use winit::{
 
 use crate::{
     camera::CameraStruct,
-    engine::{Instance, InstanceContainer, MeshType, IsDynamic},
-    model::DrawModel,
-    resources, shader, texture, window,
+    engine::{Instance, InstanceContainer, MeshType, IsDynamic, Mesh},
+    model::{DrawModel, ModelVertex},
+    resources::{self, load_texture}, shader, texture, window,
 };
 
 pub struct State {
@@ -28,10 +28,11 @@ pub struct State {
     pub mouse_pressed: bool,
     pub mouse_locked: bool,
     pub world: World,
+    build_path: String,
 }
 
 impl State {
-    pub async fn new(mouse_lock: bool) -> (Self, EventLoop<()>) {
+    pub async fn new(mouse_lock: bool,build_path: &str) -> (Self, EventLoop<()>) {
         let (window, event_loop) = window::Window::new(mouse_lock).await;
         let (device, queue) = window
             .adapter
@@ -133,6 +134,7 @@ impl State {
                 mouse_pressed: false,
                 mouse_locked: mouse_lock,
                 world: World::new(),
+                build_path: build_path.to_string()
             },
             event_loop,
         )
@@ -200,6 +202,7 @@ impl State {
     ) {
         let loaded_model = resources::load_model(
             model,
+            &self.build_path,
             &self.device,
             &self.queue,
             &self.texture_bind_group_layout,
@@ -224,6 +227,7 @@ impl State {
     ) {
         let loaded_model = resources::load_model(
             model,
+            &self.build_path,
             &self.device,
             &self.queue,
             &self.texture_bind_group_layout,
@@ -239,6 +243,55 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let container = InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
+        self.world.spawn((container,));
+    }
+    pub async fn build_mesh(&mut self, vertices: Vec<ModelVertex>, indices: Vec<u32>, texture_name: &str,instances: Vec<Instance>) {
+        let vertex_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(&vertices),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let index_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(&indices),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+            let diffuse_texture = load_texture(texture_name, 
+                &self.build_path,&self.device, &self.queue).await.unwrap();
+            let texture_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &self.texture_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
+                    },
+                ],
+                label: None,
+            });
+        let mesh = Mesh {
+            vertex_buffer,
+            index_buffer,
+            num_elements: indices.len() as u32,
+            diffuse_texture,
+            texture_bind_group
+        };
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        let instance_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Instance Buffer"),
+                contents: bytemuck::cast_slice(&instance_data),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let container = InstanceContainer::new(instance_buffer, MeshType::Mesh(mesh), instances);
         self.world.spawn((container,));
     }
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
