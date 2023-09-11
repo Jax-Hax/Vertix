@@ -8,7 +8,7 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(true,env!("OUT_DIR")).await;
     //add models
     const SPACE_BETWEEN: f32 = 3.0;
-    const NUM_INSTANCES_PER_ROW: usize = 10;
+    const NUM_INSTANCES_PER_ROW: usize = 100;
     let instances = (0..NUM_INSTANCES_PER_ROW)
         .flat_map(|z| {
             (0..NUM_INSTANCES_PER_ROW).map(move |x| {
@@ -37,7 +37,7 @@ pub async fn run() {
 fn update(state: &mut State) {
     for (_entity, (game_object, _)) in state.world.query_mut::<(&mut InstanceContainer, &IsDynamic)>() {
         for instance in &mut game_object.instances {
-            instance.position[0] += 0.001;
+            instance.position[0] += 0.01;
         }
         game_object.update(&state.queue);
     }

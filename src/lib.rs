@@ -8,8 +8,9 @@ pub mod texture;
 pub mod window;
 pub mod prelude {
     pub use crate::{
-        engine::{Instance,InstanceContainer, IsDynamic},
+        engine::{Instance,InstanceContainer, IsDynamic,Mesh},
         state::{run_event_loop, State},
+        model::ModelVertex
     };
     pub use cgmath::prelude::*;
     #[cfg(target_arch = "wasm32")]

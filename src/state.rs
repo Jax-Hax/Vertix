@@ -40,25 +40,19 @@ impl State {
                 &wgpu::DeviceDescriptor {
                     label: None,
                     features: wgpu::Features::empty(),
-                    // WebGL doesn't support all of wgpu's features, so if
-                    // we're building for the web we'll have to disable some.
                     limits: if cfg!(target_arch = "wasm32") {
                         wgpu::Limits::downlevel_webgl2_defaults()
                     } else {
                         wgpu::Limits::default()
                     },
                 },
-                // Some(&std::path::Path::new("trace")), // Trace path
-                None, // Trace path
+                None,
             )
             .await
             .unwrap();
 
         log::warn!("Surface");
         let surface_caps = window.surface.get_capabilities(&window.adapter);
-        // Shader code in this tutorial assumes an Srgb surface texture. Using a different
-        // one will result all the colors comming out darker. If you want to support non
-        // Srgb surfaces, you'll need to account for that when drawing to the frame.
         let surface_format = surface_caps
             .formats
             .iter()
@@ -332,6 +326,7 @@ impl State {
                 }),
             });
             render_pass.set_pipeline(&self.render_pipeline);
+            render_pass.set_bind_group(1, &self.camera.bind_group, &[]);
             for (_entity, (game_object,)) in self.world.query_mut::<(&InstanceContainer,)>() {
                 render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
                 match &game_object.mesh_type{
@@ -339,10 +334,14 @@ impl State {
                         render_pass.draw_model_instanced(
                             &model,
                             0..game_object.length,
-                            &self.camera.bind_group,
                         );
                     }
-                    MeshType::Mesh(mesh) => {}
+                    MeshType::Mesh(mesh) => {
+                        render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+                        render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+                        render_pass.set_bind_group(0, &mesh.texture_bind_group, &[]);
+                        render_pass.draw_indexed(0..mesh.num_elements, 0, 0..1);
+                    }
                 }
             }
         }
