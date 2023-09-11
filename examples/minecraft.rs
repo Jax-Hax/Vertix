@@ -312,7 +312,7 @@ pub async fn build_chunk(
             vertices,
             indices,
             vec![Instance { position, rotation }],
-            material
+            material,false
         )
 }
 

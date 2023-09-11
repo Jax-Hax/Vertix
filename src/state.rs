@@ -189,10 +189,11 @@ impl State {
             bytemuck::cast_slice(&[self.camera.camera_uniform]),
         );
     }
-    pub async fn create_dynamic_instances(
+    pub async fn create_model_instances(
         &mut self,
         model: &str,
         instances: Vec<Instance>,
+        is_updating: bool,
     ) {
         let loaded_model = resources::load_model(
             model,
@@ -209,35 +210,15 @@ impl State {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
                 contents: bytemuck::cast_slice(&instance_data),
-                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                usage: if is_updating {wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST} else {wgpu::BufferUsages::VERTEX},
             });
         let container = InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
-        self.world.spawn((container,IsDynamic));
-    }
-    pub async fn create_static_instances(
-        &mut self,
-        model: &str,
-        instances: Vec<Instance>,
-    ) {
-        let loaded_model = resources::load_model(
-            model,
-            &self.build_path,
-            &self.device,
-            &self.queue,
-            &self.texture_bind_group_layout,
-        )
-        .await
-        .unwrap();
-        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
-        let instance_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Instance Buffer"),
-                contents: bytemuck::cast_slice(&instance_data),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-        let container = InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
-        self.world.spawn((container,));
+        if is_updating{
+            self.world.spawn((container,IsDynamic));
+        }
+        else{
+            self.world.spawn((container,));
+        }
     }
     pub async fn compile_material(&self, texture_name: &str) -> Material{
         let diffuse_texture = load_texture(texture_name, 
@@ -258,13 +239,13 @@ impl State {
         });
         Material {bind_group: texture_bind_group}
     }
-    pub fn build_mesh(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>,instances: Vec<Instance>, material: Material) {
+    pub fn build_mesh(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>,instances: Vec<Instance>, material: Material, is_updating: bool) {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
                 contents: bytemuck::cast_slice(&vertices),
-                usage: wgpu::BufferUsages::VERTEX,
+                usage: if is_updating {wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST} else {wgpu::BufferUsages::VERTEX},
             });
         let index_buffer = self
             .device
@@ -289,7 +270,12 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let container = InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances);
-        self.world.spawn((container,));
+        if is_updating{
+            self.world.spawn((container,IsDynamic));
+        }
+        else{
+            self.world.spawn((container,));
+        }
     }
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.window.surface.get_current_texture()?;

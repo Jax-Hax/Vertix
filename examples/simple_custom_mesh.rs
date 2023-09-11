@@ -6,7 +6,26 @@ fn main() {
 pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true,env!("OUT_DIR")).await;
-    //add models
+    //custom mesh
+    let vertices = vec![
+        Vertex {
+            position: [0.5, 0.5, 0.0],
+            tex_coords: [0.0, 0.0],
+        },
+        Vertex {
+            position: [0.5, -0.5, 0.0],
+            tex_coords: [1.0, 0.0],
+        },
+        Vertex {
+            position: [-0.5, -0.5, 0.0],
+            tex_coords: [1.0, 1.0],
+        },
+        Vertex {
+            position: [-0.5, 0.5, 0.0],
+            tex_coords: [0.0, 1.0],
+        },
+    ];
+    let indices = vec![0,1,3,1,2,3];
     const SPACE_BETWEEN: f32 = 3.0;
     const NUM_INSTANCES_PER_ROW: usize = 100;
     let instances = (0..NUM_INSTANCES_PER_ROW)
@@ -27,9 +46,9 @@ pub async fn run() {
             })
         })
         .collect::<Vec<_>>();
+
     state
-        .create_model_instances("cube.obj", instances,true)
-        .await;
+        .build_mesh(vertices, indices,instances, state.compile_material("cube-diffuse.jpg").await, false);
 
     //render loop
     run_event_loop(state, event_loop, update, keyboard_input);
