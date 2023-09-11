@@ -10,7 +10,7 @@ pub mod prelude {
     pub use crate::{
         engine::{Instance,InstanceContainer, IsDynamic,Mesh},
         state::{run_event_loop, State},
-        model::ModelVertex
+        model::Vertex
     };
     pub use cgmath::prelude::*;
     #[cfg(target_arch = "wasm32")]

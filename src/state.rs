@@ -12,7 +12,7 @@ use winit::{
 use crate::{
     camera::CameraStruct,
     engine::{Instance, InstanceContainer, MeshType, IsDynamic, Mesh},
-    model::{DrawModel, ModelVertex},
+    model::{DrawModel, Vertex},
     resources::{self, load_texture}, shader, texture, window,
 };
 
@@ -239,7 +239,7 @@ impl State {
         let container = InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
         self.world.spawn((container,));
     }
-    pub async fn build_mesh(&mut self, vertices: Vec<ModelVertex>, indices: Vec<u32>, texture_name: &str,instances: Vec<Instance>) {
+    pub async fn build_mesh(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>, texture_name: &str,instances: Vec<Instance>) {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {

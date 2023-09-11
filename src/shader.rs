@@ -1,6 +1,6 @@
 use wgpu::{RenderPipeline, Device, SurfaceConfiguration};
 
-use crate::{engine::InstanceRaw, model::{ModelVertex, Vertex}, texture::Texture};
+use crate::{engine::InstanceRaw, model::Vertex, texture::Texture};
 
 pub fn make_shader(shader: &str, device: &Device, render_pipeline_layout:wgpu::PipelineLayout, config: &SurfaceConfiguration) -> RenderPipeline{
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -13,7 +13,7 @@ pub fn make_shader(shader: &str, device: &Device, render_pipeline_layout:wgpu::P
         vertex: wgpu::VertexState {
             module: &shader,
             entry_point: "vs_main",
-            buffers: &[ModelVertex::desc(), InstanceRaw::desc()],
+            buffers: &[Vertex::desc(), InstanceRaw::desc()],
         },
         fragment: Some(wgpu::FragmentState {
             module: &shader,
