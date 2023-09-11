@@ -1,5 +1,5 @@
 use noise::{NoiseFn, Perlin};
-use vertix::prelude::*;
+use vertix::{prelude::*, model::Material};
 
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Block {
@@ -60,6 +60,7 @@ async fn create_terrain(state: &mut State) {
         build_chunk(
             state,
             blocks,
+            state.compile_material("texture_atlas.png").await,
             row as f32,
             col as f32,
             match i.checked_sub(16) {
@@ -146,6 +147,7 @@ fn flip_2d_vector(input: Vec<Vec<Block>>) -> Vec<Vec<Block>> {
 pub async fn build_chunk(
     state: &mut State,
     blocks: &Vec<Vec<Vec<Block>>>,
+    material: Material,
     x_offset: f32,
     z_offset: f32,
     left_chunk: Option<&Vec<Vec<Vec<Block>>>>,
@@ -153,7 +155,7 @@ pub async fn build_chunk(
     front_chunk: Option<&Vec<Vec<Vec<Block>>>>,
     back_chunk: Option<&Vec<Vec<Vec<Block>>>>,
 ) {
-    let mut vertices: Vec<ModelVertex> = vec![];
+    let mut vertices: Vec<Vertex> = vec![];
     let mut indices: Vec<u32> = vec![];
 
     //vars in for loop code, preinitialized
@@ -304,14 +306,14 @@ pub async fn build_chunk(
         z: 0.0,
     };
     let rotation = cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(45.0));
+    
     state
         .build_mesh(
             vertices,
             indices,
-            "texture_atlas.png",
             vec![Instance { position, rotation }],
+            material
         )
-        .await
 }
 
 fn get_block_face(
@@ -320,7 +322,7 @@ fn get_block_face(
     neighbor_block_option: Option<&Block>,
     block: &Block,
     pos: [f32; 3],
-    vertices: &mut Vec<ModelVertex>,
+    vertices: &mut Vec<Vertex>,
     indices: &mut Vec<u32>,
     grass_above: bool,
     neighbor_chunk_block_option: Option<&Block>,
@@ -371,7 +373,7 @@ fn get_mesh_texture_and_pos(
     block_type: &BlockType,
     pos: [f32; 3],
     grass_above: bool,
-) -> Vec<ModelVertex> {
+) -> Vec<Vertex> {
     let vertices = match face {
         Face::Top => [
             [pos[0] - 0.5, pos[1] + 0.5, pos[2] - 0.5],
@@ -428,10 +430,9 @@ fn get_mesh_texture_and_pos(
     let texture_coords = get_texture_coords(index);
     let mut vertices_array = vec![];
     for i in 0..4 {
-        vertices_array.push(ModelVertex {
+        vertices_array.push(Vertex {
             position: vertices[i],
             tex_coords: texture_coords[i],
-            normal: [0., 0., 0.],
         })
     }
 

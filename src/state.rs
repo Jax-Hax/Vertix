@@ -11,8 +11,8 @@ use winit::{
 
 use crate::{
     camera::CameraStruct,
-    engine::{Instance, InstanceContainer, MeshType, IsDynamic, Mesh},
-    model::{DrawModel, Vertex},
+    engine::{Instance, InstanceContainer, MeshType, IsDynamic, SingleMesh},
+    model::{DrawModel, Vertex, Material},
     resources::{self, load_texture}, shader, texture, window,
 };
 
@@ -239,7 +239,26 @@ impl State {
         let container = InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
         self.world.spawn((container,));
     }
-    pub async fn build_mesh(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>, texture_name: &str,instances: Vec<Instance>) {
+    pub async fn compile_material(&self, texture_name: &str) -> Material{
+        let diffuse_texture = load_texture(texture_name, 
+            &self.build_path,&self.device, &self.queue).await.unwrap();
+        let texture_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &self.texture_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
+                },
+            ],
+            label: None,
+        });
+        Material {bind_group: texture_bind_group}
+    }
+    pub fn build_mesh(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>,instances: Vec<Instance>, material: Material) {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -254,28 +273,12 @@ impl State {
                 contents: bytemuck::cast_slice(&indices),
                 usage: wgpu::BufferUsages::INDEX,
             });
-            let diffuse_texture = load_texture(texture_name, 
-                &self.build_path,&self.device, &self.queue).await.unwrap();
-            let texture_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &self.texture_bind_group_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
-                    },
-                ],
-                label: None,
-            });
-        let mesh = Mesh {
+            
+        let mesh = SingleMesh {
             vertex_buffer,
             index_buffer,
             num_elements: indices.len() as u32,
-            diffuse_texture,
-            texture_bind_group
+            material: material
         };
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         let instance_buffer = self
@@ -285,7 +288,7 @@ impl State {
                 contents: bytemuck::cast_slice(&instance_data),
                 usage: wgpu::BufferUsages::VERTEX,
             });
-        let container = InstanceContainer::new(instance_buffer, MeshType::Mesh(mesh), instances);
+        let container = InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances);
         self.world.spawn((container,));
     }
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -336,10 +339,10 @@ impl State {
                             0..game_object.length,
                         );
                     }
-                    MeshType::Mesh(mesh) => {
+                    MeshType::SingleMesh(mesh) => {
                         render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
                         render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-                        render_pass.set_bind_group(0, &mesh.texture_bind_group, &[]);
+                        render_pass.set_bind_group(0, &mesh.material.bind_group, &[]);
                         render_pass.draw_indexed(0..mesh.num_elements, 0, 0..1);
                     }
                 }

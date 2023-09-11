@@ -3,7 +3,7 @@ use wgpu::{Buffer, Queue};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-use crate::{model::Model, texture::Texture};
+use crate::model::{Model, Material};
 pub struct IsDynamic;
 pub struct IsScreenSpace;
 pub struct InstanceContainer {
@@ -14,14 +14,13 @@ pub struct InstanceContainer {
 }
 pub enum MeshType {
     Model(Model),
-    Mesh(Mesh),
+    SingleMesh(SingleMesh),
 }
-pub struct Mesh {
+pub struct SingleMesh{
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub num_elements: u32,
-    pub diffuse_texture: Texture,
-    pub texture_bind_group: wgpu::BindGroup,
+    pub material: Material,
 }
 impl InstanceContainer {
     pub fn new(buffer: Buffer, mesh_type: MeshType, instances: Vec<Instance>) -> Self {

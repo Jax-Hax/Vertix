@@ -1,7 +1,5 @@
 use std::ops::Range;
 
-use crate::texture;
-
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -38,13 +36,10 @@ impl Vertex {
 }
 
 pub struct Material {
-    pub name: String,
-    pub diffuse_texture: texture::Texture,
     pub bind_group: wgpu::BindGroup,
 }
 
 pub struct Mesh {
-    pub name: String,
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub num_elements: u32,

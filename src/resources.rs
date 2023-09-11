@@ -110,8 +110,6 @@ pub async fn load_model(
         });
 
         materials.push(model::Material {
-            name: m.name,
-            diffuse_texture,
             bind_group,
         })
     }
@@ -147,7 +145,6 @@ pub async fn load_model(
             });
 
             model::Mesh {
-                name: file_name.to_string(),
                 vertex_buffer,
                 index_buffer,
                 num_elements: m.mesh.indices.len() as u32,

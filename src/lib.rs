@@ -8,7 +8,7 @@ pub mod texture;
 pub mod window;
 pub mod prelude {
     pub use crate::{
-        engine::{Instance,InstanceContainer, IsDynamic,Mesh},
+        engine::{Instance,InstanceContainer, IsDynamic},
         state::{run_event_loop, State},
         model::Vertex
     };
