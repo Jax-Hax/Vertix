@@ -1,10 +1,9 @@
-
+use noise::{NoiseFn, Perlin};
 use vertix::prelude::*;
 
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Block {
     block_type: BlockType,
-    is_solid: bool,
 }
 enum Face {
     Top,
@@ -16,14 +15,8 @@ enum Face {
 }
 impl Block {
     pub fn new(block_type: BlockType) -> Self {
-        let mut is_solid;
-        match block_type {
-            BlockType::Grass => is_solid = true,
-            _ => is_solid = false,
-        }
         Block {
             block_type,
-            is_solid,
         }
     }
 }
@@ -35,10 +28,121 @@ pub enum BlockType {
     Grass,
     Stone,
 }
-pub struct Chunk {
-    blocks: Vec<Vec<Vec<Block>>>,
-    mesh: Mesh,
+fn main() {
+    pollster::block_on(run());
 }
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
+pub async fn run() {
+    // State::new uses async code, so we're going to wait for it to finish
+    let (mut state, event_loop) = State::new(true, env!("OUT_DIR")).await;
+    //add models
+    create_terrain(&mut state).await;
+    //render loop
+    run_event_loop(state, event_loop, update, keyboard_input);
+}
+fn update(_state: &mut State) {}
+fn keyboard_input(_state: &mut State, _event: &KeyboardInput) {}
+
+
+async fn create_terrain(state: &mut State) {
+    let mut chunk_blocks_vec = vec![];
+    //gen chunks
+    for i in 0..256 {
+        let row = (i / 16) * 16;
+        let col = (i % 16) * 16;
+        chunk_blocks_vec.push(chunk_gen(1, row, col));
+    }
+    //gen meshes
+    for i in 0..256 {
+        let row = (i / 16) * 16;
+        let col = (i % 16) * 16;
+        let blocks = &chunk_blocks_vec[i];
+        build_chunk(
+            state,
+            blocks,
+            row as f32,
+            col as f32,
+            match i.checked_sub(16) {
+                //actually front
+                Some(j) => chunk_blocks_vec.get(j),
+                None => None,
+            },
+            match i.checked_add(16) {
+                //actually back
+                Some(j) => chunk_blocks_vec.get(j),
+                None => None,
+            },
+            if (i + 1) % 16 == 0 {
+                //actually left
+                None
+            } else {
+                chunk_blocks_vec.get(i + 1)
+            },
+            match i.checked_sub(1) {
+                Some(j) => {
+                    if j % 16 == 15 {
+                        //actually right
+                        None
+                    } else {
+                        chunk_blocks_vec.get(j)
+                    }
+                }
+                None => None,
+            },
+        )
+        .await;
+    }
+}
+fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
+    let mut test_blocks = vec![];
+    let perlin = Perlin::new(seed);
+    let x_scale = 0.03;
+    let z_scale = 0.03;
+    for x in 0..16 {
+        //front back
+        let mut vec1 = vec![];
+        for z in 0..16 {
+            //left right
+            let mut vec2 = vec![];
+            let noise_value =
+                (perlin.get([(x + row) as f64 * x_scale, (z + col) as f64 * z_scale]) + 2.0) * 10.0;
+            for y in 0..30 {
+                //up down
+                let block_type = if y < (noise_value) as usize {
+                    BlockType::Grass
+                } else {
+                    BlockType::Air
+                };
+
+                vec2.push(Block::new(block_type));
+            }
+            vec1.push(vec2);
+        }
+
+        test_blocks.push(flip_2d_vector(vec1));
+    }
+    test_blocks
+}
+fn flip_2d_vector(input: Vec<Vec<Block>>) -> Vec<Vec<Block>> {
+    if input.is_empty() {
+        return Vec::new();
+    }
+
+    let num_rows = input.len();
+    let num_cols = input[0].len();
+
+    let mut flipped = vec![vec![Block::default(); num_rows]; num_cols];
+
+    for i in 0..num_rows {
+        for j in 0..num_cols {
+            flipped[j][i] = input[i][j];
+        }
+    }
+
+    flipped
+}
+
+
 pub async fn build_chunk(
     state: &mut State,
     blocks: &Vec<Vec<Vec<Block>>>,
@@ -194,9 +298,20 @@ pub async fn build_chunk(
             }
         }
     }
-    let position= cgmath::Vector3 { x: 0.0, y: 0.0, z: 0.0 };
+    let position = cgmath::Vector3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
     let rotation = cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(45.0));
-    state.build_mesh(vertices, indices, "texture_atlas.png", vec![Instance { position, rotation  }]).await
+    state
+        .build_mesh(
+            vertices,
+            indices,
+            "texture_atlas.png",
+            vec![Instance { position, rotation }],
+        )
+        .await
 }
 
 fn get_block_face(
@@ -341,128 +456,3 @@ fn get_texture_coords(index: usize) -> [[f32; 2]; 4] {
     ]
 }
 
-fn main() {
-    pollster::block_on(run());
-}
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-pub async fn run() {
-    // State::new uses async code, so we're going to wait for it to finish
-    let (state, event_loop) = State::new(true,env!("OUT_DIR")).await;
-    //add models
-    create_terrain(&state);
-    //render loop
-    run_event_loop(state, event_loop, update, keyboard_input);
-}
-fn update(state: &mut State) {
-    
-}
-fn keyboard_input(state: &mut State, event: &KeyboardInput) {
-    
-}
-fn create_terrain(state: &State) {
-    //gen chunks
-    for i in 0..256 {
-        let row = (i / 16) * 16;
-        let col = (i % 16) * 16;
-        chunk_blocks_vec.push(chunk_gen(1, row, col));
-    }
-    //gen meshes
-    for i in 0..256 {
-        let row = (i / 16) * 16;
-        let col = (i % 16) * 16;
-        let blocks = &chunk_blocks_vec[i];
-        let mesh = build_chunk(&mut state,
-            blocks,
-            row as f32,
-            col as f32,
-            match i.checked_sub(16) {
-                //actually front
-                Some(j) => chunk_blocks_vec.get(j),
-                None => None,
-            },
-            match i.checked_add(16) {
-                //actually back
-                Some(j) => chunk_blocks_vec.get(j),
-                None => None,
-            },
-            if (i + 1) % 16 == 0 {
-                //actually left
-                None
-            } else {
-                chunk_blocks_vec.get(i + 1)
-            },
-            match i.checked_sub(1) {
-                Some(j) => {
-                    if j % 16 == 15 {
-                        //actually right
-                        None
-                    } else {
-                        chunk_blocks_vec.get(j)
-                    }
-                }
-                None => None,
-            },
-        );
-        chunk_mesh_vec.push(mesh);
-    }
-    for _ in 0..256 {
-        chunks.push(Chunk {
-            blocks: chunk_blocks_vec.remove(0),
-            mesh: chunk_mesh_vec.remove(0),
-        }) //always takes out the first element
-    }
-}
-fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
-    let mut test_blocks = vec![];
-    let perlin = Perlin::new(seed);
-    let x_scale = 0.03;
-    let z_scale = 0.03;
-    for x in 0..16 {
-        //front back
-        let mut vec1 = vec![];
-        for z in 0..16 {
-            //left right
-            let mut vec2 = vec![];
-            let noise_value =
-                (perlin.get([(x + row) as f64 * x_scale, (z + col) as f64 * z_scale]) + 2.0) * 10.0;
-            for y in 0..30 {
-                //up down
-                let block_type = if y < (noise_value) as usize {
-                    BlockType::Grass
-                } else {
-                    BlockType::Air
-                };
-
-                vec2.push(Block::new(block_type));
-            }
-            vec1.push(vec2);
-        }
-
-        test_blocks.push(flip_2d_vector(vec1));
-    }
-    test_blocks
-}
-fn flip_2d_vector(input: Vec<Vec<Block>>) -> Vec<Vec<Block>> {
-    if input.is_empty() {
-        return Vec::new();
-    }
-
-    let num_rows = input.len();
-    let num_cols = input[0].len();
-
-    let mut flipped = vec![
-        vec![
-            Block::default();
-            num_rows
-        ];
-        num_cols
-    ];
-
-    for i in 0..num_rows {
-        for j in 0..num_cols {
-            flipped[j][i] = input[i][j];
-        }
-    }
-
-    flipped
-}
