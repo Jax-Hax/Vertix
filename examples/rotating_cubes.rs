@@ -5,7 +5,7 @@ fn main() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
-    let (mut state, event_loop) = State::new(true,env!("OUT_DIR")).await;
+    let (mut state, event_loop) = State::new(true, env!("OUT_DIR")).await;
     //add models
     const SPACE_BETWEEN: f32 = 3.0;
     const NUM_INSTANCES_PER_ROW: usize = 100;
@@ -27,15 +27,21 @@ pub async fn run() {
             })
         })
         .collect::<Vec<_>>();
-    state
-        .create_model_instances("cube.obj", instances,true)
+    let (container, is_dynamic) = state
+        .create_model_instances("cube.obj", instances, true)
         .await;
-
+    match is_dynamic {
+        Some(_) => state.world.spawn((container, IsDynamic)),
+        None => state.world.spawn((container,)),
+    };
     //render loop
     run_event_loop(state, event_loop, update, keyboard_input);
 }
 fn update(state: &mut State) {
-    for (_entity, (game_object, _)) in state.world.query_mut::<(&mut InstanceContainer, &IsDynamic)>() {
+    for (_entity, (game_object, _)) in state
+        .world
+        .query_mut::<(&mut InstanceContainer, &IsDynamic)>()
+    {
         for instance in &mut game_object.instances {
             instance.position[0] += 0.01;
         }
@@ -49,13 +55,17 @@ fn keyboard_input(state: &mut State, event: &KeyboardInput) {
             state: ElementState::Pressed,
             virtual_keycode: Some(VirtualKeyCode::F),
             ..
-        } => 
-        for (_entity, (game_object,_)) in state.world.query_mut::<(&mut InstanceContainer,&IsDynamic)>() {
-            for instance in &mut game_object.instances {
-                instance.position[1] += 0.001;
+        } => {
+            for (_entity, (game_object, _)) in state
+                .world
+                .query_mut::<(&mut InstanceContainer, &IsDynamic)>()
+            {
+                for instance in &mut game_object.instances {
+                    instance.position[1] += 0.001;
+                }
+                game_object.update(&state.queue);
             }
-            game_object.update(&state.queue);
-        },
+        }
         _ => {}
     }
 }

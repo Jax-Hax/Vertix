@@ -307,13 +307,18 @@ pub async fn build_chunk(
     };
     let rotation = cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(45.0));
     
-    state
+    let (container, is_dynamic) = state
         .build_mesh(
             vertices,
             indices,
             vec![Instance { position, rotation }],
             material,false
-        )
+        );
+    match is_dynamic {
+        Some(_) => state.world.spawn((container,IsDynamic)),
+        None => state.world.spawn((container,)),
+    };
+    
 }
 
 fn get_block_face(

@@ -194,7 +194,7 @@ impl State {
         model: &str,
         instances: Vec<Instance>,
         is_updating: bool,
-    ) {
+    ) -> (InstanceContainer, Option<IsDynamic>){
         let loaded_model = resources::load_model(
             model,
             &self.build_path,
@@ -214,10 +214,10 @@ impl State {
             });
         let container = InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
         if is_updating{
-            self.world.spawn((container,IsDynamic));
+            (container,Some(IsDynamic))
         }
         else{
-            self.world.spawn((container,));
+            (container,None)
         }
     }
     pub async fn compile_material(&self, texture_name: &str) -> Material{
@@ -239,7 +239,7 @@ impl State {
         });
         Material {bind_group: texture_bind_group}
     }
-    pub fn build_mesh(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>,instances: Vec<Instance>, material: Material, is_updating: bool) {
+    pub fn build_mesh(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>,instances: Vec<Instance>, material: Material, is_updating: bool) -> (InstanceContainer, Option<IsDynamic>){
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -271,10 +271,10 @@ impl State {
             });
         let container = InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances);
         if is_updating{
-            self.world.spawn((container,IsDynamic));
+            (container,Some(IsDynamic))
         }
         else{
-            self.world.spawn((container,));
+            (container,None)
         }
     }
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
