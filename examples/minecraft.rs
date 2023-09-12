@@ -1,3 +1,4 @@
+use glam::{Quat, Vec3};
 use noise::{NoiseFn, Perlin};
 use vertix::{prelude::*, model::Material};
 
@@ -300,12 +301,12 @@ pub async fn build_chunk(
             }
         }
     }
-    let position = cgmath::Vector3 {
+    let position = Vec3 {
         x: 0.0,
         y: 0.0,
         z: 0.0,
     };
-    let rotation = cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(45.0));
+    let rotation = Quat::from_axis_angle(position.normalize(), f32::to_radians(45.0));
     
     let (container, is_dynamic) = state
         .build_mesh(

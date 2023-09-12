@@ -16,7 +16,6 @@ crate-type = ["cdylib", "rlib"]
 cfg-if = "1"
 anyhow = "1.0"
 bytemuck = { version = "1.12", features = [ "derive" ] }
-cgmath = "0.18"
 env_logger = "0.10"
 pollster = "0.3"
 log = "0.4"
@@ -26,6 +25,7 @@ winit = "0.28"
 instant = "0.1"
 getrandom = { version = "0.2", features = ["js"] }
 hecs = "0.10.3"
+glam = "0.24.1"
 
 [dev-dependencies]
 noise = "0.8"

@@ -12,7 +12,6 @@ pub mod prelude {
         state::{run_event_loop, State},
         model::Vertex
     };
-    pub use cgmath::prelude::*;
     #[cfg(target_arch = "wasm32")]
     pub use wasm_bindgen::prelude::*;
     pub use winit::event::{ElementState, KeyboardInput, VirtualKeyCode};

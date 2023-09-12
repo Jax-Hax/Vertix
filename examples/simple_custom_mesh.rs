@@ -1,3 +1,4 @@
+use glam::{Vec3, Quat};
 use vertix::prelude::*;
 fn main() {
     pollster::block_on(run());
@@ -32,19 +33,19 @@ pub async fn run() {
 
     let indices = vec![0, 1, 4, 1, 2, 4, 2, 3, 4];
     let instances = vec![Instance {
-        position: cgmath::Vector3 {
+        position: Vec3 {
             x: 0.0,
             y: 0.0,
             z: 0.0,
         },
-        rotation: cgmath::Quaternion::from_axis_angle(
-            cgmath::Vector3 {
+        rotation: Quat::from_axis_angle(
+            Vec3 {
                 x: 0.0,
                 y: 0.0,
                 z: 0.0,
             }
             .normalize(),
-            cgmath::Deg(45.0),
+            f32::to_radians(45.0),
         ),
     }];
     let (container, is_dynamic) = state.build_mesh(

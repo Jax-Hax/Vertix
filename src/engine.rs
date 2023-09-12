@@ -2,7 +2,7 @@ use wgpu::{Buffer, Queue};
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-
+use glam::{Vec3, Quat, Mat4};
 use crate::model::{Model, Material};
 pub struct IsDynamic;
 pub struct IsScreenSpace;
@@ -42,16 +42,15 @@ impl InstanceContainer {
     }
 }
 pub struct Instance {
-    pub position: cgmath::Vector3<f32>,
-    pub rotation: cgmath::Quaternion<f32>,
+    pub position: Vec3,
+    pub rotation: Quat,
 }
 
 impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw {
-            model: (cgmath::Matrix4::from_translation(self.position)
-                * cgmath::Matrix4::from(self.rotation))
-            .into(),
+            model: Mat4::from_rotation_translation(self.rotation,self.position)
+            .to_cols_array_2d(),
         }
     }
 }

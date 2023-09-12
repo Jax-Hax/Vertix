@@ -1,18 +1,18 @@
-use cgmath::*;
 use std::f32::consts::FRAC_PI_2;
 use std::time::Duration;
+use glam::{Mat4, Vec3};
 use wgpu::util::DeviceExt;
 use wgpu::{Device, SurfaceConfiguration, Buffer, BindGroupLayout, BindGroup};
 use winit::dpi::PhysicalPosition;
 use winit::event::*;
 
 #[rustfmt::skip]
-pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
-    1.0, 0.0, 0.0, 0.0,
+pub const OPENGL_TO_WGPU_MATRIX: Mat4 = Mat4::from_cols_array(
+    &[1.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
     0.0, 0.0, 0.5, 0.5,
-    0.0, 0.0, 0.0, 1.0,
-);
+    0.0, 0.0, 0.0, 1.0]
+); //possibly change
 
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
 
@@ -27,13 +27,13 @@ impl CameraUniform {
     pub fn new() -> Self {
         Self {
             view_position: [0.0; 4],
-            view_proj: cgmath::Matrix4::identity().into(),
+            view_proj: Mat4::IDENTITY.to_cols_array_2d(), //maybe here
         }
     }
 
     pub fn update_view_proj(&mut self, camera: &Camera, projection: &Projection) {
-        self.view_position = camera.position.to_homogeneous().into();
-        self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
+        self.view_position = camera.position.extend(1.).into();
+        self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).to_cols_array_2d();
     }
 }
 pub struct CameraStruct{
@@ -47,8 +47,8 @@ pub struct CameraStruct{
 }
 impl CameraStruct{
     pub fn new(device: &Device, config: &SurfaceConfiguration) -> Self{
-        let camera = Camera::new((0.0, 5.0, 10.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
-        let projection = Projection::new(config.width, config.height, cgmath::Deg(45.0), 0.1, 100.0);
+        let camera = Camera::new(Vec3::new(0.0, 5.0, 10.0), f32::to_radians(-90.0), f32::to_radians(-20.0));
+        let projection = Projection::new(config.width, config.height, f32::to_radians(45.0), 0.1, 100.0);
         let camera_controller = CameraController::new(4.0, 1.0);
     
         let mut camera_uniform = CameraUniform::new();
@@ -90,45 +90,45 @@ impl CameraStruct{
 
 #[derive(Debug)]
 pub struct Camera {
-    pub position: Point3<f32>,
-    yaw: Rad<f32>,
-    pitch: Rad<f32>,
+    pub position: Vec3,
+    yaw: f32, //angle in radians
+    pitch: f32, //angle in radians
 }
 
 impl Camera {
-    pub fn new<V: Into<Point3<f32>>, Y: Into<Rad<f32>>, P: Into<Rad<f32>>>(
-        position: V,
-        yaw: Y,
-        pitch: P,
+    pub fn new(
+        position: Vec3,
+        yaw: f32,
+        pitch: f32,
     ) -> Self {
         Self {
             position: position.into(),
-            yaw: yaw.into(),
-            pitch: pitch.into(),
+            yaw,
+            pitch,
         }
     }
 
-    pub fn calc_matrix(&self) -> Matrix4<f32> {
-        let (sin_pitch, cos_pitch) = self.pitch.0.sin_cos();
-        let (sin_yaw, cos_yaw) = self.yaw.0.sin_cos();
+    pub fn calc_matrix(&self) -> Mat4 {
+        let (sin_pitch, cos_pitch) = self.pitch.sin_cos();
+        let (sin_yaw, cos_yaw) = self.yaw.sin_cos();
 
-        Matrix4::look_to_rh(
+        Mat4::look_to_rh(
             self.position,
-            Vector3::new(cos_pitch * cos_yaw, sin_pitch, cos_pitch * sin_yaw).normalize(),
-            Vector3::unit_y(),
+            Vec3::new(cos_pitch * cos_yaw, sin_pitch, cos_pitch * sin_yaw).normalize(),
+            Vec3::Y,
         )
     }
 }
 
 pub struct Projection {
     aspect: f32,
-    fovy: Rad<f32>,
+    fovy: f32,
     znear: f32,
     zfar: f32,
 }
 
 impl Projection {
-    pub fn new<F: Into<Rad<f32>>>(width: u32, height: u32, fovy: F, znear: f32, zfar: f32) -> Self {
+    pub fn new<F: Into<f32>>(width: u32, height: u32, fovy: F, znear: f32, zfar: f32) -> Self {
         Self {
             aspect: width as f32 / height as f32,
             fovy: fovy.into(),
@@ -141,8 +141,8 @@ impl Projection {
         self.aspect = width as f32 / height as f32;
     }
 
-    pub fn calc_matrix(&self) -> Matrix4<f32> {
-        OPENGL_TO_WGPU_MATRIX * perspective(self.fovy, self.aspect, self.znear, self.zfar)
+    pub fn calc_matrix(&self) -> Mat4 {
+        OPENGL_TO_WGPU_MATRIX * Mat4::perspective_rh_gl(self.fovy, self.aspect, self.znear, self.zfar)
     }
 }
 
@@ -230,9 +230,9 @@ impl CameraController {
         let dt = dt.as_secs_f32();
 
         // Move forward/backward and left/right
-        let (yaw_sin, yaw_cos) = camera.yaw.0.sin_cos();
-        let forward = Vector3::new(yaw_cos, 0.0, yaw_sin).normalize();
-        let right = Vector3::new(-yaw_sin, 0.0, yaw_cos).normalize();
+        let (yaw_sin, yaw_cos) = camera.yaw.sin_cos();
+        let forward = Vec3::new(yaw_cos, 0.0, yaw_sin).normalize();
+        let right = Vec3::new(-yaw_sin, 0.0, yaw_cos).normalize();
         camera.position += forward * (self.amount_forward - self.amount_backward) * self.speed * dt;
         camera.position += right * (self.amount_right - self.amount_left) * self.speed * dt;
 
@@ -240,9 +240,9 @@ impl CameraController {
         // Note: this isn't an actual zoom. The camera's position
         // changes when zooming. I've added this to make it easier
         // to get closer to an object you want to focus on.
-        let (pitch_sin, pitch_cos) = camera.pitch.0.sin_cos();
+        let (pitch_sin, pitch_cos) = camera.pitch.sin_cos();
         let scrollward =
-            Vector3::new(pitch_cos * yaw_cos, pitch_sin, pitch_cos * yaw_sin).normalize();
+        Vec3::new(pitch_cos * yaw_cos, pitch_sin, pitch_cos * yaw_sin).normalize();
         camera.position += scrollward * self.scroll * self.speed * self.sensitivity * dt;
         self.scroll = 0.0;
 
@@ -251,8 +251,8 @@ impl CameraController {
         camera.position.y += (self.amount_up - self.amount_down) * self.speed * dt;
 
         // Rotate
-        camera.yaw += Rad(self.rotate_horizontal) * self.sensitivity * dt;
-        camera.pitch += Rad(-self.rotate_vertical) * self.sensitivity * dt;
+        camera.yaw += self.rotate_horizontal * self.sensitivity * dt;
+        camera.pitch += -self.rotate_vertical * self.sensitivity * dt;
 
         // If process_mouse isn't called every frame, these values
         // will not get set to zero, and the camera will rotate
@@ -261,10 +261,10 @@ impl CameraController {
         self.rotate_vertical = 0.0;
 
         // Keep the camera's angle from going too high/low.
-        if camera.pitch < -Rad(SAFE_FRAC_PI_2) {
-            camera.pitch = -Rad(SAFE_FRAC_PI_2);
-        } else if camera.pitch > Rad(SAFE_FRAC_PI_2) {
-            camera.pitch = Rad(SAFE_FRAC_PI_2);
+        if camera.pitch < -SAFE_FRAC_PI_2 {
+            camera.pitch = -SAFE_FRAC_PI_2;
+        } else if camera.pitch > SAFE_FRAC_PI_2 {
+            camera.pitch = SAFE_FRAC_PI_2;
         }
     }
 }
