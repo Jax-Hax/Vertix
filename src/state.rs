@@ -11,7 +11,7 @@ use winit::{
 
 use crate::{
     camera::CameraStruct,
-    engine::{Instance, InstanceContainer, MeshType, IsDynamic, SingleMesh},
+    engine::{Instance, InstanceContainer, MeshType, IsDynamic, SingleMesh, WorldSpace},
     model::{DrawModel, Vertex, Material},
     resources::{self, load_texture}, shader, texture, window,
 };
@@ -118,7 +118,7 @@ impl State {
             });
             let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("bool buffer"),
-                contents: bytemuck::cast_slice(&[true]),
+                contents: bytemuck::cast_slice(&[1]),
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             });
             let world_space_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -351,9 +351,9 @@ impl State {
             self.queue.write_buffer(
                 &self.uniform_buffer,
                 0,
-                bytemuck::cast_slice(&[false]),
+                bytemuck::cast_slice(&[0]),
             );
-            render_pass.set_bind_group(0, &self.world_space_bind_group, &[]);
+            render_pass.set_bind_group(2, &self.world_space_bind_group, &[]);
             for (_entity, (game_object,)) in self.world.query_mut::<(&InstanceContainer,)>() {
                 render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
                 match &game_object.mesh_type{

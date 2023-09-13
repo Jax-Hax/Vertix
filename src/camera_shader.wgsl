@@ -7,7 +7,7 @@ struct Camera {
 @group(1) @binding(0)
 var<uniform> camera: Camera;
 @group(2) @binding(0)
-var<uniform> is_world_space: bool;
+var<uniform> is_world_space: u32;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -39,7 +39,7 @@ fn vs_main(
     let world_position = model_matrix * vec4<f32>(model.position, 1.0);
     var out: VertexOutput;
     out.tex_coords = model.tex_coords;
-    if is_world_space {
+    if (is_world_space == u32(1)) {
         out.clip_position = camera.view_proj * world_position;
     }
     else {
