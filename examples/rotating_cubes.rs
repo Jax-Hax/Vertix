@@ -1,5 +1,5 @@
 use glam::{Vec3, Quat};
-use vertix::prelude::*;
+use vertix::{prelude::*, engine::WorldSpace};
 fn main() {
     pollster::block_on(run());
 }
@@ -28,8 +28,8 @@ pub async fn run() {
         .create_model_instances("cube.obj", instances, true)
         .await;
     match is_dynamic {
-        Some(_) => state.world.spawn((container, IsDynamic)),
-        None => state.world.spawn((container,)),
+        Some(_) => state.world.spawn((container, IsDynamic,WorldSpace)),
+        None => state.world.spawn((container,WorldSpace)),
     };
     //render loop
     run_event_loop(state, event_loop, update, keyboard_input);

@@ -1,6 +1,6 @@
 use glam::{Quat, Vec3};
 use noise::{NoiseFn, Perlin};
-use vertix::{prelude::*, model::Material};
+use vertix::{prelude::*, model::Material, engine::WorldSpace};
 
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Block {
@@ -316,8 +316,8 @@ pub async fn build_chunk(
             material,false
         );
     match is_dynamic {
-        Some(_) => state.world.spawn((container,IsDynamic)),
-        None => state.world.spawn((container,)),
+        Some(_) => state.world.spawn((container,IsDynamic,WorldSpace)),
+        None => state.world.spawn((container,WorldSpace)),
     };
     
 }
