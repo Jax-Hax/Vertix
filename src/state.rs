@@ -1,6 +1,6 @@
 use std::iter;
 use hecs::World;
-use wgpu::util::DeviceExt;
+use wgpu::{util::DeviceExt, BindGroup, Buffer};
 use winit::{
     event::{
         DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
@@ -29,6 +29,8 @@ pub struct State {
     pub mouse_locked: bool,
     pub world: World,
     build_path: String,
+    world_space_bind_group: BindGroup,
+    uniform_buffer: Buffer,
 }
 
 impl State {
@@ -99,11 +101,38 @@ impl State {
 
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
-
+        
+        let world_space_bgl =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+                label: Some("camera_bind_group_layout"),
+            });
+            let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("bool buffer"),
+                contents: bytemuck::cast_slice(&[true]),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            });
+            let world_space_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &world_space_bgl,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: uniform_buffer.as_entire_binding(),
+                }],
+                label: Some("world_space_bind_group"),
+            });
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&texture_bind_group_layout, &camera.bind_group_layout],
+                bind_group_layouts: &[&texture_bind_group_layout, &camera.bind_group_layout,&world_space_bgl],
                 push_constant_ranges: &[],
             });
 
@@ -128,7 +157,9 @@ impl State {
                 mouse_pressed: false,
                 mouse_locked: mouse_lock,
                 world: World::new(),
-                build_path: build_path.to_string()
+                build_path: build_path.to_string(),
+                world_space_bind_group,
+                uniform_buffer
             },
             event_loop,
         )
@@ -316,6 +347,13 @@ impl State {
             });
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(1, &self.camera.bind_group, &[]);
+
+            self.queue.write_buffer(
+                &self.uniform_buffer,
+                0,
+                bytemuck::cast_slice(&[false]),
+            );
+            render_pass.set_bind_group(0, &self.world_space_bind_group, &[]);
             for (_entity, (game_object,)) in self.world.query_mut::<(&InstanceContainer,)>() {
                 render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
                 match &game_object.mesh_type{
