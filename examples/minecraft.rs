@@ -302,11 +302,11 @@ pub async fn build_chunk(
         }
     }
     let position = Vec3 {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
+        x: 1.0,
+        y: 1.0,
+        z: 1.0,
     };
-    let rotation = Quat::from_axis_angle(position.normalize(), f32::to_radians(45.0));
+    let rotation = Quat::from_axis_angle(position.normalize(), f32::to_radians(0.0));
     
     let (container, is_dynamic) = state
         .build_mesh(

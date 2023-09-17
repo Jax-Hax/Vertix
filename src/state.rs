@@ -351,7 +351,7 @@ impl State {
             self.queue.write_buffer(
                 &self.uniform_buffer,
                 0,
-                bytemuck::cast_slice(&[0]),
+                bytemuck::cast_slice(&[1]),
             );
             render_pass.set_bind_group(2, &self.world_space_bind_group, &[]);
             for (_entity, (game_object,)) in self.world.query_mut::<(&InstanceContainer,)>() {
