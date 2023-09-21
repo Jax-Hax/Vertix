@@ -8,9 +8,10 @@ pub mod texture;
 pub mod window;
 pub mod prelude {
     pub use crate::{
-        engine::{Instance,InstanceContainer, IsDynamic},
+        engine::{Instance,InstanceContainer, IsDynamic, WorldSpace},
         state::{run_event_loop, State},
-        model::Vertex
+        model::Vertex,
+        camera::Camera
     };
     #[cfg(target_arch = "wasm32")]
     pub use wasm_bindgen::prelude::*;

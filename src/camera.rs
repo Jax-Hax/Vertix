@@ -1,9 +1,12 @@
 use glam::{Mat4, Vec3};
+use instant::Duration;
 use wgpu::util::DeviceExt;
 use wgpu::{Device, SurfaceConfiguration, Buffer, BindGroupLayout, BindGroup};
 
 use crate::engine::CameraController;
-
+use crate::state::State;
+use std::f32::consts::FRAC_PI_2;
+const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: Mat4 = Mat4::from_cols_array(
     &[1.0, 0.0, 0.0, 0.0,
@@ -138,5 +141,48 @@ impl Projection {
 
     pub fn calc_matrix(&self) -> Mat4 {
         OPENGL_TO_WGPU_MATRIX * Mat4::perspective_rh_gl(self.fovy, self.aspect, self.znear, self.zfar)
+    }
+}
+
+pub fn default_3d_cam(state: &mut State, dt: Duration) {
+    let dt = dt.as_secs_f32();
+    let mut camera = &mut state.camera.camera_transform;
+    let mut controller = &mut state.camera.camera_controller;
+    // Move forward/backward and left/right
+    let (yaw_sin, yaw_cos) = camera.yaw.sin_cos();
+    let forward = Vec3::new(yaw_cos, 0.0, yaw_sin).normalize();
+    let right = Vec3::new(-yaw_sin, 0.0, yaw_cos).normalize();
+    camera.position += forward * (controller.amount_forward - controller.amount_backward) * controller.speed * dt;
+    camera.position += right * (controller.amount_right - controller.amount_left) * controller.speed * dt;
+
+    // Move in/out (aka. "zoom")
+    // Note: this isn't an actual zoom. The camera's position
+    // changes when zooming. I've added this to make it easier
+    // to get closer to an object you want to focus on.
+    let (pitch_sin, pitch_cos) = camera.pitch.sin_cos();
+    let scrollward =
+    Vec3::new(pitch_cos * yaw_cos, pitch_sin, pitch_cos * yaw_sin).normalize();
+    camera.position += scrollward * controller.scroll * controller.speed * controller.sensitivity * dt;
+    controller.scroll = 0.0;
+
+    // Move up/down. Since we don't use roll, we can just
+    // modify the y coordinate directly.
+    camera.position.y += (controller.amount_up - controller.amount_down) * controller.speed * dt;
+
+    // Rotate
+    camera.yaw += controller.rotate_horizontal * controller.sensitivity * dt;
+    camera.pitch += -controller.rotate_vertical * controller.sensitivity * dt;
+
+    // If process_mouse isn't called every frame, these values
+    // will not get set to zero, and the camera will rotate
+    // when moving in a non cardinal direction.
+    controller.rotate_horizontal = 0.0;
+    controller.rotate_vertical = 0.0;
+
+    // Keep the camera's angle from going too high/low.
+    if camera.pitch < -SAFE_FRAC_PI_2 {
+        camera.pitch = -SAFE_FRAC_PI_2;
+    } else if camera.pitch > SAFE_FRAC_PI_2 {
+        camera.pitch = SAFE_FRAC_PI_2;
     }
 }
