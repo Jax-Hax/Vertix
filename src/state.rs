@@ -31,7 +31,6 @@ pub struct State {
     build_path: String,
     world_space_bind_group: BindGroup,
     uniform_buffer: Buffer,
-    camera_controller_struct: CameraController,
 }
 
 impl State {
@@ -98,7 +97,7 @@ impl State {
             });
 
         //camera
-        let camera = CameraStruct::new(&device, &config, cam);
+        let camera = CameraStruct::new(&device, &config, cam, CameraController::new(speed,sensitivity));
 
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
@@ -160,8 +159,7 @@ impl State {
                 world: World::new(),
                 build_path: build_path.to_string(),
                 world_space_bind_group,
-                uniform_buffer,
-                camera_controller_struct: CameraController::new(speed,sensitivity)
+                uniform_buffer
             },
             event_loop,
         )
@@ -193,9 +191,9 @@ impl State {
                         ..
                     },
                 ..
-            } => self.camera_controller_struct.process_keyboard(*key, *state),
+            } => self.camera.camera_controller.process_keyboard(*key, *state),
             WindowEvent::MouseWheel { delta, .. } => {
-                self.camera_controller_struct.process_scroll(delta);
+                self.camera.camera_controller.process_scroll(delta);
                 true
             }
             WindowEvent::MouseInput {
@@ -210,8 +208,6 @@ impl State {
         }
     }
     pub fn update(&mut self, dt: std::time::Duration) {
-        self.camera_controller_struct
-            .update_camera(&mut self.camera.camera_transform, dt);
         self.camera
             .camera_uniform
             .update_view_proj(&self.camera.camera_transform, &self.camera.projection);
@@ -385,7 +381,7 @@ pub fn run_event_loop(
     event_loop: EventLoop<()>,
     update: fn(&mut State),
     keyboard_input: fn(&mut State, &winit::event::KeyboardInput),
-    cam_process_mouse: fn (&mut self, key: VirtualKeyCode, state: ElementState) -> bool,
+    cam_update: fn (&mut State, dt: std::time::Duration) -> bool,
 ) {
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
@@ -397,7 +393,7 @@ pub fn run_event_loop(
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
             } => if state.mouse_pressed || state.mouse_locked {
-                state.camera_controller_struct.process_mouse(delta.0, delta.1)
+                state.camera.camera_controller.process_mouse(delta.0, delta.1)
             }
             Event::WindowEvent {
                 ref event,
@@ -432,6 +428,7 @@ pub fn run_event_loop(
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
+                cam_update(&mut state, dt);
                 state.update(dt);
                 update(&mut state);
 

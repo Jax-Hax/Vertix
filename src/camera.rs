@@ -5,6 +5,8 @@ use wgpu::util::DeviceExt;
 use wgpu::{Device, SurfaceConfiguration, Buffer, BindGroupLayout, BindGroup};
 use winit::event::*;
 
+use crate::engine::CameraController;
+
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: Mat4 = Mat4::from_cols_array(
     &[1.0, 0.0, 0.0, 0.0,
@@ -40,10 +42,11 @@ pub struct CameraStruct{
     pub buffer: Buffer,
     pub bind_group_layout: BindGroupLayout,
     pub bind_group: BindGroup,
-    pub camera_transform: Camera
+    pub camera_transform: Camera,
+    pub camera_controller: CameraController
 }
 impl CameraStruct{
-    pub fn new(device: &Device, config: &SurfaceConfiguration, camera: Camera) -> Self{
+    pub fn new(device: &Device, config: &SurfaceConfiguration, camera: Camera, camera_controller: CameraController) -> Self{
         let projection = Projection::new(config.width, config.height, f32::to_radians(45.0), 0.1, 100.0);
     
         let mut camera_uniform = CameraUniform::new();
@@ -78,7 +81,7 @@ impl CameraStruct{
             }],
             label: Some("camera_bind_group"),
         });
-        Self {projection,camera_uniform, buffer, bind_group_layout, bind_group, camera_transform: camera }
+        Self {projection,camera_uniform, buffer, bind_group_layout, bind_group, camera_transform: camera, camera_controller }
     }
 }
 
