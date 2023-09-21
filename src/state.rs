@@ -207,7 +207,7 @@ impl State {
             _ => false,
         }
     }
-    pub fn update(&mut self, dt: std::time::Duration) {
+    pub fn update(&mut self) {
         self.camera
             .camera_uniform
             .update_view_proj(&self.camera.camera_transform, &self.camera.projection);
@@ -381,7 +381,7 @@ pub fn run_event_loop(
     event_loop: EventLoop<()>,
     update: fn(&mut State),
     keyboard_input: fn(&mut State, &winit::event::KeyboardInput),
-    cam_update: fn (&mut State, dt: std::time::Duration) -> bool,
+    cam_update: fn (&mut State, dt: std::time::Duration),
 ) {
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
@@ -429,7 +429,7 @@ pub fn run_event_loop(
                 let dt = now - last_render_time;
                 last_render_time = now;
                 cam_update(&mut state, dt);
-                state.update(dt);
+                state.update();
                 update(&mut state);
 
                 match state.render() {

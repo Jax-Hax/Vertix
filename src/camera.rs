@@ -1,9 +1,6 @@
-use std::f32::consts::FRAC_PI_2;
-use std::time::Duration;
 use glam::{Mat4, Vec3};
 use wgpu::util::DeviceExt;
 use wgpu::{Device, SurfaceConfiguration, Buffer, BindGroupLayout, BindGroup};
-use winit::event::*;
 
 use crate::engine::CameraController;
 
@@ -15,7 +12,7 @@ pub const OPENGL_TO_WGPU_MATRIX: Mat4 = Mat4::from_cols_array(
     0.0, 0.0, 0.0, 1.0]
 );
 
-const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
+
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -89,8 +86,8 @@ impl CameraStruct{
 #[derive(Debug)]
 pub struct Camera {
     pub position: Vec3,
-    yaw: f32, //angle in radians
-    pitch: f32, //angle in radians
+    pub yaw: f32, //angle in radians
+    pub pitch: f32, //angle in radians
 }
 
 impl Camera {
