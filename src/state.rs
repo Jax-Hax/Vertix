@@ -10,8 +10,8 @@ use winit::{
 };
 
 use crate::{
-    camera::CameraStruct,
-    engine::{Instance, InstanceContainer, MeshType, IsDynamic, SingleMesh},
+    camera::{CameraStruct, Camera},
+    engine::{Instance, InstanceContainer, MeshType, IsDynamic, SingleMesh, CameraController},
     model::{DrawModel, Vertex, Material},
     resources::{self, load_texture}, shader, texture, window,
 };
@@ -31,10 +31,11 @@ pub struct State {
     build_path: String,
     world_space_bind_group: BindGroup,
     uniform_buffer: Buffer,
+    camera_controller_struct: CameraController,
 }
 
 impl State {
-    pub async fn new(mouse_lock: bool,build_path: &str) -> (Self, EventLoop<()>) {
+    pub async fn new(mouse_lock: bool,build_path: &str, cam: Camera, speed: f32, sensitivity: f32) -> (Self, EventLoop<()>) {
         let (window, event_loop) = window::Window::new(mouse_lock).await;
         let (device, queue) = window
             .adapter
@@ -97,7 +98,7 @@ impl State {
             });
 
         //camera
-        let camera = CameraStruct::new(&device, &config);
+        let camera = CameraStruct::new(&device, &config, cam);
 
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
@@ -159,7 +160,8 @@ impl State {
                 world: World::new(),
                 build_path: build_path.to_string(),
                 world_space_bind_group,
-                uniform_buffer
+                uniform_buffer,
+                camera_controller_struct: CameraController::new(speed,sensitivity)
             },
             event_loop,
         )
@@ -191,9 +193,9 @@ impl State {
                         ..
                     },
                 ..
-            } => self.camera.camera_controller.process_keyboard(*key, *state),
+            } => self.camera_controller_struct.process_keyboard(*key, *state),
             WindowEvent::MouseWheel { delta, .. } => {
-                self.camera.camera_controller.process_scroll(delta);
+                self.camera_controller_struct.process_scroll(delta);
                 true
             }
             WindowEvent::MouseInput {
@@ -208,8 +210,7 @@ impl State {
         }
     }
     pub fn update(&mut self, dt: std::time::Duration) {
-        self.camera
-            .camera_controller
+        self.camera_controller_struct
             .update_camera(&mut self.camera.camera_transform, dt);
         self.camera
             .camera_uniform
@@ -384,6 +385,7 @@ pub fn run_event_loop(
     event_loop: EventLoop<()>,
     update: fn(&mut State),
     keyboard_input: fn(&mut State, &winit::event::KeyboardInput),
+    cam_process_mouse: fn (&mut self, key: VirtualKeyCode, state: ElementState) -> bool,
 ) {
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
@@ -395,7 +397,7 @@ pub fn run_event_loop(
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
             } => if state.mouse_pressed || state.mouse_locked {
-                state.camera.camera_controller.process_mouse(delta.0, delta.1)
+                state.camera_controller_struct.process_mouse(delta.0, delta.1)
             }
             Event::WindowEvent {
                 ref event,

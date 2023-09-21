@@ -21,12 +21,6 @@ pub struct CameraUniform {
     view_position: [f32; 4],
     view_proj: [[f32; 4]; 4],
 }
-pub trait CamController {
-    fn process_keyboard(&mut self, key: VirtualKeyCode, state: ElementState) -> bool;
-    fn process_mouse(&mut self, mouse_dx: f64, mouse_dy: f64);
-    fn process_scroll(&mut self, delta: &MouseScrollDelta);
-    fn update_camera(&mut self, camera: &mut Camera, dt: Duration);
-}
 impl CameraUniform {
     pub fn new() -> Self {
         Self {
@@ -45,14 +39,15 @@ pub struct CameraStruct{
     pub camera_uniform: CameraUniform,
     pub buffer: Buffer,
     pub bind_group_layout: BindGroupLayout,
-    pub bind_group: BindGroup
+    pub bind_group: BindGroup,
+    pub camera_transform: Camera
 }
 impl CameraStruct{
-    pub fn new(device: &Device, config: &SurfaceConfiguration, camera: &Camera) -> Self{
+    pub fn new(device: &Device, config: &SurfaceConfiguration, camera: Camera) -> Self{
         let projection = Projection::new(config.width, config.height, f32::to_radians(45.0), 0.1, 100.0);
     
         let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(camera, &projection);
+        camera_uniform.update_view_proj(&camera, &projection);
     
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
@@ -83,7 +78,7 @@ impl CameraStruct{
             }],
             label: Some("camera_bind_group"),
         });
-        Self {projection,camera_uniform, buffer, bind_group_layout, bind_group }
+        Self {projection,camera_uniform, buffer, bind_group_layout, bind_group, camera_transform: camera }
     }
 }
 
