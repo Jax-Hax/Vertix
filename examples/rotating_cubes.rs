@@ -1,10 +1,15 @@
 use glam::{Vec3, Quat};
-use vertix::{prelude::*, engine::WorldSpace};
+use vertix::{prelude::*, engine::WorldSpace, camera::Camera};
+
+use crate::threed_cam::CameraController;
+mod threed_cam;
 fn main() {
     pollster::block_on(run());
 }
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
+    let camera = Camera::new(Vec3::new(0.0, 5.0, 10.0), f32::to_radians(-90.0), f32::to_radians(-20.0));
+    let camera_controller = CameraController::new(4.0, 1.0);
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR")).await;
     //add models
