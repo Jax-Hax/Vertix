@@ -10,7 +10,7 @@ fn main() {
 pub async fn run() {
     let camera = Camera::new(Vec3::new(0.0, 5.0, 10.0), f32::to_radians(-90.0), f32::to_radians(-20.0));
     // State::new uses async code, so we're going to wait for it to finish
-    let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 4.0, 0.4).await;
+    let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     const SPACE_BETWEEN: f32 = 3.0;
     const NUM_INSTANCES_PER_ROW: usize = 100;
