@@ -126,16 +126,9 @@ fn main() {
 pub async fn run() {
     let camera = Camera::new(Vec3::new(0.0, 5.0, 10.0), f32::to_radians(-90.0), f32::to_radians(-20.0));
     // State::new uses async code, so we're going to wait for it to finish
-    let (state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
+    let (state, _event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     let steps = compute_shader(&state.device, &state.queue, &[1, 2, 3, 4]).await.unwrap();
-
-    let disp_steps: Vec<String> = steps
-        .iter()
-        .map(|&n| match n {
-            OVERFLOW => "OVERFLOW".to_string(),
-            _ => n.to_string(),
-        })
-        .collect();
-
-    println!("Steps: [{}]", disp_steps.join(", "));
+    for num in steps{
+        println!("{},", num);
+    }
 }
