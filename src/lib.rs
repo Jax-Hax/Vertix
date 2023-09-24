@@ -1,5 +1,5 @@
 pub mod camera;
-pub mod engine;
+pub mod structs;
 pub mod model;
 pub mod resources;
 pub mod shader;
@@ -8,7 +8,7 @@ pub mod texture;
 pub mod window;
 pub mod prelude {
     pub use crate::{
-        engine::{Instance,InstanceContainer, IsDynamic, WorldSpace},
+        structs::{Instance,InstanceContainer, IsDynamic, WorldSpace},
         state::{run_event_loop, State},
         model::Vertex,
         camera::Camera

@@ -11,7 +11,7 @@ use winit::{
 
 use crate::{
     camera::{CameraStruct, Camera},
-    engine::{Instance, InstanceContainer, MeshType, IsDynamic, SingleMesh, CameraController},
+    structs::{Instance, InstanceContainer, MeshType, IsDynamic, SingleMesh, CameraController},
     model::{DrawModel, Vertex, Material},
     resources::{self, load_texture}, shader, texture, window,
 };

@@ -1,5 +1,5 @@
 use glam::{Vec3, Quat};
-use vertix::{prelude::*, engine::WorldSpace, camera::{Camera, default_3d_cam}};
+use vertix::{prelude::*, structs::WorldSpace, camera::{Camera, default_3d_cam}};
 fn main() {
     pollster::block_on(run());
 }

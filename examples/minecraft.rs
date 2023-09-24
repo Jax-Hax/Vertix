@@ -1,6 +1,6 @@
 use glam::{Quat, Vec3};
 use noise::{NoiseFn, Perlin};
-use vertix::{prelude::*, model::Material, engine::WorldSpace, camera::{Camera, default_3d_cam}};
+use vertix::{prelude::*, model::Material, structs::WorldSpace, camera::{Camera, default_3d_cam}};
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Block {
     block_type: BlockType,

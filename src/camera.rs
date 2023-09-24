@@ -3,7 +3,7 @@ use instant::Duration;
 use wgpu::util::DeviceExt;
 use wgpu::{Device, SurfaceConfiguration, Buffer, BindGroupLayout, BindGroup};
 
-use crate::engine::CameraController;
+use crate::structs::CameraController;
 use crate::state::State;
 use std::f32::consts::FRAC_PI_2;
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
