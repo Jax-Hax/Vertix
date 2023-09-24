@@ -1,6 +1,6 @@
 use glam::Vec3;
 use wgpu::util::DeviceExt;
-use vertix::{prelude::*, camera::default_3d_cam};
+use vertix::prelude::*;
 pub async fn compute_shader(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
