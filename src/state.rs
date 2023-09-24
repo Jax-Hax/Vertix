@@ -137,7 +137,7 @@ impl State {
             });
 
         let render_pipeline = shader::make_shader(
-            include_str!("camera_shader.wgsl"),
+            include_str!("shader.wgsl"),
             &device,
             render_pipeline_layout,
             &config,
