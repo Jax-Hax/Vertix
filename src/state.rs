@@ -4,7 +4,7 @@ use wgpu::{util::DeviceExt, BindGroup, Buffer};
 use winit::{
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
     event_loop::EventLoop,
-    window::Window,
+    window::Window, dpi::PhysicalPosition,
 };
 
 use crate::{
@@ -32,6 +32,7 @@ pub struct State {
     build_path: String,
     world_space_bind_group: BindGroup,
     uniform_buffer: Buffer,
+    pub mouse_pos: PhysicalPosition<f64>
 }
 
 impl State {

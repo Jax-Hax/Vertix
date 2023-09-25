@@ -1,4 +1,4 @@
-use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
+use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}, dpi::PhysicalPosition};
 
 use crate::state::State;
 
@@ -8,6 +8,7 @@ pub struct EventHandler{
     pub keyboard_input: Option<fn(&mut State, &winit::event::KeyboardInput)>,
     pub mouse_input: Option<fn(&mut State, &winit::event::KeyboardInput)>,
     pub cam_update: Option<fn (&mut State, dt: std::time::Duration)>,
+    pub mouse_move: Option<fn(&mut State, &PhysicalPosition<f64>)>,
 }
 
 pub fn run_event_loop(
@@ -47,6 +48,11 @@ pub fn run_event_loop(
                     WindowEvent::KeyboardInput { input, .. } => {
                         if event_handler.keyboard_input.is_some() {
                             event_handler.keyboard_input.unwrap()(&mut state, input);
+                        }
+                    }
+                    WindowEvent::CursorMoved { position, .. } => {
+                        if event_handler.mouse_move.is_some() {
+                            event_handler.mouse_move.unwrap()(&mut state, position);
                         }
                     }
                     WindowEvent::Resized(physical_size) => {
