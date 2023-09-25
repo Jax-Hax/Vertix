@@ -60,7 +60,6 @@ impl Instance {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct InstanceRaw {
-    #[allow(dead_code)]
     model: [[f32; 4]; 4],
 }
 
