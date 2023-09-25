@@ -6,6 +6,7 @@ pub mod shader;
 pub mod state;
 pub mod texture;
 pub mod window;
+pub mod primitives;
 pub mod prelude {
     pub use crate::{
         structs::{Instance,InstanceContainer, IsDynamic, WorldSpace},

@@ -1,5 +1,5 @@
-use glam::{Vec3, Quat};
-use vertix::{prelude::*, structs::WorldSpace, camera::{Camera, default_3d_cam}};
+use glam::{Vec3, Quat, Vec2};
+use vertix::{prelude::*, camera::{Camera, default_3d_cam}, primitives::rect};
 fn main() {
     pollster::block_on(run());
 }
@@ -9,26 +9,7 @@ pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //custom mesh
-    let vertices = vec![
-        Vertex {
-            position: [-0.5, -0.5, 0.0],
-            tex_coords: [0.4, 0.4],
-        }, // A
-        Vertex {
-            position: [-0.5, 1., 0.0],
-            tex_coords: [0.5, 0.5],
-        }, // B
-        Vertex {
-            position: [1., 0., 0.0],
-            tex_coords: [0.6, 0.6],
-        }, // C
-        Vertex {
-            position: [1., 1., 0.0],
-            tex_coords: [0.7, 0.7],
-        }, // D
-    ];
-
-    let indices = vec![2,1,0, 1, 2, 3];
+    let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
     let instances = vec![Instance {
         position: Vec3 {
             x: 0.0,
