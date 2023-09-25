@@ -12,7 +12,8 @@ pub mod event;
 pub mod prelude {
     pub use crate::{
         structs::{Instance,InstanceContainer, IsDynamic, WorldSpace},
-        state::{run_event_loop, State},
+        event::run_event_loop,
+        state::State,
         structs::Vertex,
         camera::Camera
     };

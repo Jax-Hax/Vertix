@@ -1,5 +1,5 @@
 use glam::{Vec3, Quat, Vec2};
-use vertix::{prelude::*, camera::{Camera, default_3d_cam}, primitives::rect};
+use vertix::{prelude::*, camera::{Camera, default_3d_cam}, primitives::rect, event::EventHandler};
 fn main() {
     pollster::block_on(run());
 }
@@ -30,8 +30,7 @@ pub async fn run() {
         Some(_) => state.world.spawn((container, IsDynamic)),
         None => state.world.spawn((container,)),
     };
+    let event_handler = EventHandler {cam_update: Some(default_3d_cam), ..Default::default()};
     //render loop
-    run_event_loop(state, event_loop, update, keyboard_input, default_3d_cam);
+    run_event_loop(state, event_loop, event_handler);
 }
-fn update(_state: &mut State) {}
-fn keyboard_input(_state: &mut State, _event: &KeyboardInput) {}

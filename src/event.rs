@@ -1,10 +1,19 @@
+use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
+
+use crate::state::State;
+
+#[derive(Default)]
+pub struct EventHandler{
+    pub update: Option<fn(&mut State)>,
+    pub keyboard_input: Option<fn(&mut State, &winit::event::KeyboardInput)>,
+    pub mouse_input: Option<fn(&mut State, &winit::event::KeyboardInput)>,
+    pub cam_update: Option<fn (&mut State, dt: std::time::Duration)>,
+}
+
 pub fn run_event_loop(
     mut state: State,
     event_loop: EventLoop<()>,
-    update: Option<fn(&mut State)>,
-    keyboard_input: Option<fn(&mut State, &winit::event::KeyboardInput)>,
-    mouse_input: Option<fn(&mut State, &winit::event::KeyboardInput)>,
-    cam_update: Option<fn (&mut State, dt: std::time::Duration)>,
+    event_handler: EventHandler
 ) {
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
@@ -36,8 +45,8 @@ pub fn run_event_loop(
                         ..
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::KeyboardInput { input, .. } => {
-                        if keyboard_input.is_some() {
-                        keyboard_input.unwrap()(&mut state, input);
+                        if event_handler.keyboard_input.is_some() {
+                            event_handler.keyboard_input.unwrap()(&mut state, input);
                         }
                     }
                     WindowEvent::Resized(physical_size) => {
@@ -53,14 +62,13 @@ pub fn run_event_loop(
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                if cam_update.is_some() {
-                    cam_update.unwrap()(&mut state, dt);
-                    }
-                
+                if event_handler.cam_update.is_some() {
+                    event_handler.cam_update.unwrap()(&mut state, dt);
+                }
                 state.update();
-                if update.is_some() {
-                    update.unwrap()(&mut state);
-                    }
+                if event_handler.update.is_some() {
+                    event_handler.update.unwrap()(&mut state);
+                }
 
                 match state.render() {
                     Ok(_) => {}

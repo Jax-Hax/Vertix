@@ -1,4 +1,5 @@
 use glam::Vec2;
+use winit::dpi::PhysicalPosition;
 
 pub struct Box2D {
     x_max: f32,
@@ -15,7 +16,7 @@ impl Box2D {
             y_min: if p1.y < p2.y {p1.y} else {p2.y}
         }
     }
-    pub fn check_collision(pos:) -> bool {
-
+    pub fn check_collision(pos: PhysicalPosition<f32>) -> bool {
+        true
     }
 }

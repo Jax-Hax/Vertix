@@ -1,19 +1,20 @@
-use std::iter;
 use hecs::World;
+use std::iter;
 use wgpu::{util::DeviceExt, BindGroup, Buffer};
 use winit::{
-    event::{
-        DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
-    },
-    event_loop::{ControlFlow, EventLoop},
+    event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
+    event_loop::EventLoop,
     window::Window,
 };
 
 use crate::{
-    camera::{CameraStruct, Camera},
-    structs::{Instance, InstanceContainer, MeshType, IsDynamic, SingleMesh, CameraController},
+    camera::{Camera, CameraStruct},
     model::{DrawModel, Material},
-    resources::{self, load_texture}, shader, texture, window, prelude::Vertex,
+    prelude::Vertex,
+    resources::{self, load_texture},
+    shader,
+    structs::{CameraController, Instance, InstanceContainer, IsDynamic, MeshType, SingleMesh},
+    texture, window,
 };
 
 pub struct State {
@@ -34,7 +35,13 @@ pub struct State {
 }
 
 impl State {
-    pub async fn new(mouse_lock: bool,build_path: &str, cam: Camera, speed: f32, sensitivity: f32) -> (Self, EventLoop<()>) {
+    pub async fn new(
+        mouse_lock: bool,
+        build_path: &str,
+        cam: Camera,
+        speed: f32,
+        sensitivity: f32,
+    ) -> (Self, EventLoop<()>) {
         let (window, event_loop) = window::Window::new(mouse_lock).await;
         let (device, queue) = window
             .adapter
@@ -97,42 +104,50 @@ impl State {
             });
 
         //camera
-        let camera = CameraStruct::new(&device, &config, cam, CameraController::new(speed,sensitivity));
+        let camera = CameraStruct::new(
+            &device,
+            &config,
+            cam,
+            CameraController::new(speed, sensitivity),
+        );
 
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
-        
-        let world_space_bgl =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                }],
-                label: Some("camera_bind_group_layout"),
-            });
-            let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("bool buffer"),
-                contents: bytemuck::cast_slice(&[1]),
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            });
-            let world_space_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &world_space_bgl,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: uniform_buffer.as_entire_binding(),
-                }],
-                label: Some("world_space_bind_group"),
-            });
+
+        let world_space_bgl = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+            label: Some("camera_bind_group_layout"),
+        });
+        let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("bool buffer"),
+            contents: bytemuck::cast_slice(&[1]),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
+        let world_space_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &world_space_bgl,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: uniform_buffer.as_entire_binding(),
+            }],
+            label: Some("world_space_bind_group"),
+        });
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&texture_bind_group_layout, &camera.bind_group_layout,&world_space_bgl],
+                bind_group_layouts: &[
+                    &texture_bind_group_layout,
+                    &camera.bind_group_layout,
+                    &world_space_bgl,
+                ],
                 push_constant_ranges: &[],
             });
 
@@ -159,7 +174,7 @@ impl State {
                 world: World::new(),
                 build_path: build_path.to_string(),
                 world_space_bind_group,
-                uniform_buffer
+                uniform_buffer,
             },
             event_loop,
         )
@@ -222,7 +237,7 @@ impl State {
         model: &str,
         instances: Vec<Instance>,
         is_updating: bool,
-    ) -> (InstanceContainer, Option<IsDynamic>){
+    ) -> (InstanceContainer, Option<IsDynamic>) {
         let loaded_model = resources::load_model(
             model,
             &self.build_path,
@@ -238,19 +253,25 @@ impl State {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
                 contents: bytemuck::cast_slice(&instance_data),
-                usage: if is_updating {wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST} else {wgpu::BufferUsages::VERTEX},
+                usage: if is_updating {
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                } else {
+                    wgpu::BufferUsages::VERTEX
+                },
             });
-        let container = InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
-        if is_updating{
-            (container,Some(IsDynamic))
-        }
-        else{
-            (container,None)
+        let container =
+            InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
+        if is_updating {
+            (container, Some(IsDynamic))
+        } else {
+            (container, None)
         }
     }
-    pub async fn compile_material(&self, texture_name: &str) -> Material{
-        let diffuse_texture = load_texture(texture_name, 
-            &self.build_path,&self.device, &self.queue).await.unwrap();
+    pub async fn compile_material(&self, texture_name: &str) -> Material {
+        let diffuse_texture =
+            load_texture(texture_name, &self.build_path, &self.device, &self.queue)
+                .await
+                .unwrap();
         let texture_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &self.texture_bind_group_layout,
             entries: &[
@@ -265,15 +286,28 @@ impl State {
             ],
             label: None,
         });
-        Material {bind_group: texture_bind_group}
+        Material {
+            bind_group: texture_bind_group,
+        }
     }
-    pub fn build_mesh(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>,instances: Vec<Instance>, material: Material, is_updating: bool) -> (InstanceContainer, Option<IsDynamic>){
+    pub fn build_mesh(
+        &mut self,
+        vertices: Vec<Vertex>,
+        indices: Vec<u32>,
+        instances: Vec<Instance>,
+        material: Material,
+        is_updating: bool,
+    ) -> (InstanceContainer, Option<IsDynamic>) {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
                 contents: bytemuck::cast_slice(&vertices),
-                usage: if is_updating {wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST} else {wgpu::BufferUsages::VERTEX},
+                usage: if is_updating {
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                } else {
+                    wgpu::BufferUsages::VERTEX
+                },
             });
         let index_buffer = self
             .device
@@ -282,12 +316,12 @@ impl State {
                 contents: bytemuck::cast_slice(&indices),
                 usage: wgpu::BufferUsages::INDEX,
             });
-            
+
         let mesh = SingleMesh {
             vertex_buffer,
             index_buffer,
             num_elements: indices.len() as u32,
-            material: material
+            material: material,
         };
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         let instance_buffer = self
@@ -297,12 +331,12 @@ impl State {
                 contents: bytemuck::cast_slice(&instance_data),
                 usage: wgpu::BufferUsages::VERTEX,
             });
-        let container = InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances);
-        if is_updating{
-            (container,Some(IsDynamic))
-        }
-        else{
-            (container,None)
+        let container =
+            InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances);
+        if is_updating {
+            (container, Some(IsDynamic))
+        } else {
+            (container, None)
         }
     }
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -345,24 +379,21 @@ impl State {
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(1, &self.camera.bind_group, &[]);
 
-            self.queue.write_buffer(
-                &self.uniform_buffer,
-                0,
-                bytemuck::cast_slice(&[1]),
-            );
+            self.queue
+                .write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[1]));
             render_pass.set_bind_group(2, &self.world_space_bind_group, &[]);
             for (_entity, (game_object,)) in self.world.query_mut::<(&InstanceContainer,)>() {
                 render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
-                match &game_object.mesh_type{
+                match &game_object.mesh_type {
                     MeshType::Model(model) => {
-                        render_pass.draw_model_instanced(
-                            &model,
-                            0..game_object.length,
-                        );
+                        render_pass.draw_model_instanced(&model, 0..game_object.length);
                     }
                     MeshType::SingleMesh(mesh) => {
                         render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-                        render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+                        render_pass.set_index_buffer(
+                            mesh.index_buffer.slice(..),
+                            wgpu::IndexFormat::Uint32,
+                        );
                         render_pass.set_bind_group(0, &mesh.material.bind_group, &[]);
                         render_pass.draw_indexed(0..mesh.num_elements, 0, 0..1);
                     }
@@ -376,7 +407,3 @@ impl State {
         Ok(())
     }
 }
-macro_rules! run_event_loop{
-    ($x: expr, $y: expr) => {run_event_loop($x, $y)};
-}
-
