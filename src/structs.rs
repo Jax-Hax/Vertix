@@ -46,13 +46,18 @@ impl InstanceContainer {
 pub struct Instance {
     pub position: Vec3,
     pub rotation: Quat,
+    pub color: [f32; 4],
 }
 
 impl Instance {
+    pub fn new(position: Vec3, rotation: Quat) -> Self {
+        Self {position,rotation, color: [1.0,1.0,1.0,1.0]}
+    }
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw {
             model: Mat4::from_rotation_translation(self.rotation,self.position)
             .to_cols_array_2d(),
+            color: self.color
         }
     }
 }
@@ -83,11 +88,6 @@ impl Vertex {
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2,
                 },
-                wgpu::VertexAttribute {
-                    offset: mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
-                    shader_location: 2,
-                    format: wgpu::VertexFormat::Float32x4,
-                },
             ],
         }
     }
@@ -96,6 +96,7 @@ impl Vertex {
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct InstanceRaw {
     model: [[f32; 4]; 4],
+    color: [f32; 4]
 }
 
 impl InstanceRaw {
@@ -130,6 +131,11 @@ impl InstanceRaw {
                 wgpu::VertexAttribute {
                     offset: mem::size_of::<[f32; 12]>() as wgpu::BufferAddress,
                     shader_location: 8,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 16]>() as wgpu::BufferAddress,
+                    shader_location: 9,
                     format: wgpu::VertexFormat::Float32x4,
                 },
             ],

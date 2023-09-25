@@ -10,14 +10,14 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //custom mesh
     let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
-    let instances = vec![Instance {
-        position: Vec3 {
+    let instances = vec![Instance::new(
+        Vec3 {
             x: 0.0,
             y: 0.0,
             z: 0.0,
         },
-        rotation: Quat::IDENTITY,
-    }];
+        Quat::IDENTITY,
+    )];
     let (container, is_dynamic) = state.build_mesh(
         vertices,
         indices,
