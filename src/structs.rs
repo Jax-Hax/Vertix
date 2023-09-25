@@ -53,6 +53,9 @@ impl Instance {
     pub fn new(position: Vec3, rotation: Quat) -> Self {
         Self {position,rotation, color: [1.0,1.0,1.0,1.0]}
     }
+    pub fn new_with_color(position: Vec3, rotation: Quat, color: [f32; 4]) -> Self {
+        Self {position,rotation, color}
+    }
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw {
             model: Mat4::from_rotation_translation(self.rotation,self.position)
