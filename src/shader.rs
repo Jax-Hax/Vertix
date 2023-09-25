@@ -1,6 +1,6 @@
 use wgpu::{RenderPipeline, Device, SurfaceConfiguration};
 
-use crate::{structs::InstanceRaw, model::Vertex, texture::Texture};
+use crate::{structs::InstanceRaw, texture::Texture, prelude::Vertex};
 
 pub fn make_shader(shader: &str, device: &Device, render_pipeline_layout:wgpu::PipelineLayout, config: &SurfaceConfiguration) -> RenderPipeline{
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {

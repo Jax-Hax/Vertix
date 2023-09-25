@@ -11,7 +11,7 @@ pub mod prelude {
     pub use crate::{
         structs::{Instance,InstanceContainer, IsDynamic, WorldSpace},
         state::{run_event_loop, State},
-        model::Vertex,
+        structs::Vertex,
         camera::Camera
     };
     #[cfg(target_arch = "wasm32")]

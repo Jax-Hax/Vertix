@@ -436,10 +436,7 @@ fn get_mesh_texture_and_pos(
     let texture_coords = get_texture_coords(index);
     let mut vertices_array = vec![];
     for i in 0..4 {
-        vertices_array.push(Vertex {
-            position: vertices[i],
-            tex_coords: texture_coords[i],
-        })
+        vertices_array.push(Vertex::new_from_tex(vertices[i], texture_coords[i]))
     }
 
     vertices_array

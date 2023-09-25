@@ -12,8 +12,8 @@ use winit::{
 use crate::{
     camera::{CameraStruct, Camera},
     structs::{Instance, InstanceContainer, MeshType, IsDynamic, SingleMesh, CameraController},
-    model::{DrawModel, Vertex, Material},
-    resources::{self, load_texture}, shader, texture, window,
+    model::{DrawModel, Material},
+    resources::{self, load_texture}, shader, texture, window, prelude::Vertex,
 };
 
 pub struct State {
