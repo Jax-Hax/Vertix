@@ -118,7 +118,7 @@ pub async fn load_model(
         .into_iter()
         .map(|m| {
             let vertices = (0..m.mesh.positions.len() / 3)
-                .map(|i| Vertex::new_from_tex([
+                .map(|i| Vertex::new([
                     m.mesh.positions[i * 3],
                     m.mesh.positions[i * 3 + 1],
                     m.mesh.positions[i * 3 + 2],

@@ -61,18 +61,11 @@ impl Instance {
 pub struct Vertex {
     pub position: [f32; 3],
     pub tex_coords: [f32; 2],
-    pub color: [f32; 4],
 }
 
 impl Vertex {
-    pub fn new_from_tex_and_col(position: [f32; 3], tex_coords: [f32; 2], color: [f32; 4]) -> Self {
-        Self { position, tex_coords, color }
-    }
-    pub fn new_from_col(position: [f32; 3], color: [f32; 4]) -> Self {
-        Self { position, tex_coords: [0.0,0.0], color }
-    }
-    pub fn new_from_tex(position: [f32; 3], tex_coords: [f32; 2]) -> Self {
-        Self { position, tex_coords, color: [1.0,1.0,1.0,1.0] }
+    pub fn new(position: [f32; 3], tex_coords: [f32; 2]) -> Self {
+        Self { position, tex_coords }
     }
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
         use std::mem;
