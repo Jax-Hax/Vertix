@@ -39,8 +39,8 @@ pub async fn run() {
         .create_model_instances("cube.obj", instances, true)
         .await;
     match is_dynamic {
-        Some(_) => state.world.spawn((container, IsDynamic, WorldSpace)),
-        None => state.world.spawn((container, WorldSpace)),
+        Some(_) => state.world.spawn((container, IsDynamic, WorldSpace,)),
+        None => state.world.spawn((container, WorldSpace,)),
     };
     //render loop
     run_event_loop(

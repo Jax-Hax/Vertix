@@ -10,7 +10,7 @@ use winit::{
 use crate::{
     camera::{Camera, CameraStruct},
     model::{DrawModel, Material},
-    prelude::Vertex,
+    prelude::{Vertex, WorldSpace},
     resources::{self, load_texture},
     shader,
     structs::{CameraController, Instance, InstanceContainer, IsDynamic, MeshType, SingleMesh},
@@ -380,11 +380,10 @@ impl State {
             });
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(1, &self.camera.bind_group, &[]);
-
             self.queue
-                .write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[1]));
+                .write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[0]));
             render_pass.set_bind_group(2, &self.world_space_bind_group, &[]);
-            for (_entity, (game_object,)) in self.world.query_mut::<(&InstanceContainer,)>() {
+            for (_entity, (game_object, )) in self.world.query_mut::<(&InstanceContainer,)>() {
                 render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
                 match &game_object.mesh_type {
                     MeshType::Model(model) => {
