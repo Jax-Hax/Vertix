@@ -1,6 +1,6 @@
 use glam::{Quat, Vec3};
 use noise::{NoiseFn, Perlin};
-use vertix::{prelude::*, model::Material, structs::WorldSpace, camera::{Camera, default_3d_cam}, event::EventHandler};
+use vertix::{prelude::*, model::Material, structs::WorldSpace, camera::{Camera, default_3d_cam}};
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Block {
     block_type: BlockType,
@@ -38,9 +38,8 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     create_terrain(&mut state).await;
-    let event_handler = EventHandler {cam_update: Some(default_3d_cam), ..Default::default()};
     //render loop
-    run_event_loop(state, event_loop, event_handler);
+    run_event_loop(state, event_loop, None, None, Some(default_3d_cam));
 }
 
 async fn create_terrain(state: &mut State) {

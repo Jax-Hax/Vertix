@@ -176,6 +176,7 @@ impl State {
                 build_path: build_path.to_string(),
                 world_space_bind_group,
                 uniform_buffer,
+                mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }
             },
             event_loop,
         )

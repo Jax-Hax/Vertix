@@ -1,12 +1,21 @@
-use glam::{Vec3, Quat};
-use vertix::{prelude::*, structs::WorldSpace, camera::{Camera, default_3d_cam}, event::EventHandler};
+use glam::{Quat, Vec3};
+use vertix::{
+    camera::{default_3d_cam, Camera},
+    prelude::*,
+    structs::WorldSpace,
+};
+use winit::event::WindowEvent;
 
 fn main() {
     pollster::block_on(run());
 }
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
-    let camera = Camera::new(Vec3::new(0.0, 5.0, 10.0), f32::to_radians(-90.0), f32::to_radians(-20.0));
+    let camera = Camera::new(
+        Vec3::new(0.0, 5.0, 10.0),
+        f32::to_radians(-90.0),
+        f32::to_radians(-20.0),
+    );
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
@@ -30,12 +39,17 @@ pub async fn run() {
         .create_model_instances("cube.obj", instances, true)
         .await;
     match is_dynamic {
-        Some(_) => state.world.spawn((container, IsDynamic,WorldSpace)),
-        None => state.world.spawn((container,WorldSpace)),
+        Some(_) => state.world.spawn((container, IsDynamic, WorldSpace)),
+        None => state.world.spawn((container, WorldSpace)),
     };
-    let event_handler = EventHandler {cam_update: Some(default_3d_cam), keyboard_input: Some(keyboard_input), update: Some(update), ..Default::default()};
     //render loop
-    run_event_loop(state, event_loop, event_handler);
+    run_event_loop(
+        state,
+        event_loop,
+        Some(update),
+        Some(input),
+        Some(default_3d_cam),
+    );
 }
 
 fn update(state: &mut State) {
@@ -49,24 +63,27 @@ fn update(state: &mut State) {
         game_object.update(&state.queue);
     }
 }
-fn keyboard_input(state: &mut State, event: &KeyboardInput) {
+fn input(state: &mut State, event: &WindowEvent) {
     //keyboard inputs
     match event {
-        KeyboardInput {
-            state: ElementState::Pressed,
-            virtual_keycode: Some(VirtualKeyCode::F),
-            ..
-        } => {
-            for (_entity, (game_object, _)) in state
-                .world
-                .query_mut::<(&mut InstanceContainer, &IsDynamic)>()
-            {
-                for instance in &mut game_object.instances {
-                    instance.position[1] += 0.001;
+        WindowEvent::KeyboardInput { input, .. } => match input {
+            KeyboardInput {
+                state: ElementState::Pressed,
+                virtual_keycode: Some(VirtualKeyCode::F),
+                ..
+            } => {
+                for (_entity, (game_object, _)) in state
+                    .world
+                    .query_mut::<(&mut InstanceContainer, &IsDynamic)>()
+                {
+                    for instance in &mut game_object.instances {
+                        instance.position[1] += 0.001;
+                    }
+                    game_object.update(&state.queue);
                 }
-                game_object.update(&state.queue);
             }
-        }
+            _ => {}
+        },
         _ => {}
     }
 }
