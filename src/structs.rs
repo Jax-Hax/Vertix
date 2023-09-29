@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 use glam::{Vec3, Quat, Mat4};
 use winit::{event::{VirtualKeyCode, ElementState, MouseScrollDelta}, dpi::PhysicalPosition};
 use crate::model::{Model, Material};
-pub struct IsDynamic;
+pub struct IsDynamic();
 pub struct ScreenSpace();
 pub struct WorldSpace();
 pub struct InstanceContainer {

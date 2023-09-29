@@ -9,6 +9,7 @@ pub mod window;
 pub mod primitives;
 pub mod collision;
 pub mod event;
+mod render;
 pub mod prelude {
     pub use crate::{
         structs::{Instance,InstanceContainer, IsDynamic, WorldSpace},

@@ -13,7 +13,7 @@ use crate::{
     prelude::{Vertex, WorldSpace},
     resources::{self, load_texture},
     shader,
-    structs::{CameraController, Instance, InstanceContainer, IsDynamic, MeshType, SingleMesh},
+    structs::{CameraController, Instance, InstanceContainer, IsDynamic, MeshType, SingleMesh, ScreenSpace},
     texture, window,
 };
 
@@ -21,17 +21,17 @@ pub struct State {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
-    render_pipeline: wgpu::RenderPipeline,
+    pub render_pipeline: wgpu::RenderPipeline,
     pub camera: CameraStruct,
-    depth_texture: texture::Texture,
+    pub depth_texture: texture::Texture,
     pub window: window::Window,
-    texture_bind_group_layout: wgpu::BindGroupLayout,
+    pub texture_bind_group_layout: wgpu::BindGroupLayout,
     pub mouse_pressed: bool,
     pub mouse_locked: bool,
     pub world: World,
     build_path: String,
-    world_space_bind_group: BindGroup,
-    uniform_buffer: Buffer,
+    pub world_space_bind_group: BindGroup,
+    pub uniform_buffer: Buffer,
     pub mouse_pos: PhysicalPosition<f64>
 }
 
@@ -264,7 +264,7 @@ impl State {
         let container =
             InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
         if is_updating {
-            (container, Some(IsDynamic))
+            (container, Some(IsDynamic()))
         } else {
             (container, None)
         }
@@ -336,75 +336,9 @@ impl State {
         let container =
             InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances);
         if is_updating {
-            (container, Some(IsDynamic))
+            (container, Some(IsDynamic()))
         } else {
             (container, None)
         }
-    }
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        let output = self.window.surface.get_current_texture()?;
-        let view = output
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Render Encoder"),
-            });
-
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.1,
-                            g: 0.2,
-                            b: 0.3,
-                            a: 1.0,
-                        }),
-                        store: true,
-                    },
-                })],
-                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &self.depth_texture.view,
-                    depth_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(1.0),
-                        store: true,
-                    }),
-                    stencil_ops: None,
-                }),
-            });
-            render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_bind_group(1, &self.camera.bind_group, &[]);
-            self.queue
-                .write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[0]));
-            render_pass.set_bind_group(2, &self.world_space_bind_group, &[]);
-            for (_entity, (game_object, )) in self.world.query_mut::<(&InstanceContainer,)>() {
-                render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
-                match &game_object.mesh_type {
-                    MeshType::Model(model) => {
-                        render_pass.draw_model_instanced(&model, 0..game_object.length);
-                    }
-                    MeshType::SingleMesh(mesh) => {
-                        render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-                        render_pass.set_index_buffer(
-                            mesh.index_buffer.slice(..),
-                            wgpu::IndexFormat::Uint32,
-                        );
-                        render_pass.set_bind_group(0, &mesh.material.bind_group, &[]);
-                        render_pass.draw_indexed(0..mesh.num_elements, 0, 0..1);
-                    }
-                }
-            }
-        }
-
-        self.queue.submit(iter::once(encoder.finish()));
-        output.present();
-
-        Ok(())
     }
 }

@@ -1,6 +1,6 @@
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::state::State;
+use crate::{state::State, render::render};
 
 pub fn run_event_loop(
     mut state: State,
@@ -65,7 +65,7 @@ pub fn run_event_loop(
                     update.unwrap()(&mut state);
                 }
 
-                match state.render() {
+                match render(&mut state) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.window.size),
