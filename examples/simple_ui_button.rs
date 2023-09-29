@@ -19,8 +19,10 @@ pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(false, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //custom mesh
-    let (vertices, indices) = rect(Vec2::new(0.5, 0.5), Vec2::new(-0.5, -0.5));
-    let collider = Box2D::new(Vec2::new(0.5, 0.5), Vec2::new(-0.5, -0.5));
+    let p1 = Vec2::new(-0.5, -0.5);
+    let p2 = Vec2::new(0.5, 0.5);
+    let (vertices, indices) = rect(p1,p2);
+    let collider = Box2D::new(p1,p2);
     let instances = vec![Instance::new_with_color(
         Vec3 {
             x: 0.0,
@@ -48,15 +50,12 @@ fn input(state: &mut State, event: &WindowEvent) {
     //keyboard inputs
     match event {
         WindowEvent::CursorMoved { position, .. } => {
-            for (_entity, (game_object, collider, _)) in state
+            let pos = state.window.normalize_position(position);
+            for (_entity, (game_object, collider,)) in state
                 .world
-                .query_mut::<(&mut InstanceContainer, &Box2D, &IsDynamic)>()
+                .query_mut::<(&mut InstanceContainer, &Box2D,)>()
             {
-                collider.check_collision(position);
-                for instance in &mut game_object.instances {
-                    instance.position[1] += 0.001;
-                }
-                game_object.update(&state.queue);
+                collider.check_collision(&pos);
             }
         }
         _ => {}

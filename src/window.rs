@@ -1,6 +1,6 @@
 use wgpu::{Adapter, Surface};
 use winit::{
-    dpi::PhysicalSize,
+    dpi::{PhysicalSize, PhysicalPosition},
     event_loop::EventLoop,
     window::{Fullscreen, WindowBuilder},
 };
@@ -133,5 +133,11 @@ impl Window {
             },
             event_loop,
         )
+    }
+    pub fn normalize_position(&self, pos: &PhysicalPosition<f64>) -> PhysicalPosition<f32>{ 
+        let normalized_x = pos.x as f32/ self.size.width as f32;
+        let normalized_y = pos.y as f32 / self.size.height as f32;
+        println!("x-PDSFOSDF {}, {}", normalized_x, normalized_y);
+        PhysicalPosition { x: normalized_x, y: normalized_y }
     }
 }
