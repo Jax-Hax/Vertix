@@ -135,9 +135,8 @@ impl Window {
         )
     }
     pub fn normalize_position(&self, pos: &PhysicalPosition<f64>) -> PhysicalPosition<f32>{ 
-        let normalized_x = pos.x as f32/ self.size.width as f32;
-        let normalized_y = pos.y as f32 / self.size.height as f32;
-        println!("x-PDSFOSDF {}, {}", normalized_x, normalized_y);
+        let normalized_x = (pos.x as f32/ self.size.width as f32) * 2. - 1.; //normalize to be between -1 and 1 instead of 0-1
+        let normalized_y = ((pos.y as f32 / self.size.height as f32) - 0.5) * -2.; //normalize to be between -1 and 1 as well as flip
         PhysicalPosition { x: normalized_x, y: normalized_y }
     }
 }
