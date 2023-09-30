@@ -88,3 +88,22 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
 
     Ok(())
 }
+fn test(state: &mut State) {
+    for (_entity, (game_object, _ )) in state.world.query_mut::<(&InstanceContainer,&WorldSpace)>() {
+        /*render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
+        match &game_object.mesh_type {
+            MeshType::Model(model) => {
+                render_pass.draw_model_instanced(&model, 0..game_object.length);
+            }
+            MeshType::SingleMesh(mesh) => {
+                render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+                render_pass.set_index_buffer(
+                    mesh.index_buffer.slice(..),
+                    wgpu::IndexFormat::Uint32,
+                );
+                render_pass.set_bind_group(0, &mesh.material.bind_group, &[]);
+                render_pass.draw_indexed(0..mesh.num_elements, 0, 0..1);
+            }
+        }*/
+    }
+}
