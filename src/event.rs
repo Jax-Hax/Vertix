@@ -2,12 +2,13 @@ use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, Wi
 
 use crate::{state::State, render::render};
 
-pub fn run_event_loop(
+pub fn run_event_loop<T>(
     mut state: State,
+    main_state: T,
     event_loop: EventLoop<()>,
-    update: Option<fn(&mut State)>,
-    input: Option<fn(&mut State, &WindowEvent)>,
-    cam_update: Option<fn (&mut State, dt: std::time::Duration)>,
+    update: Option<fn(&mut State, T)>,
+    input: Option<fn(&mut State, &WindowEvent, T)>,
+    cam_update: Option<fn (&mut State, dt: std::time::Duration, T)>,
 ) {
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
@@ -27,7 +28,7 @@ pub fn run_event_loop(
             } if window_id == state.window().id() => {
                 state.input(event);
                 if input.is_some() {
-                    input.unwrap()(&mut state,event);
+                    input.unwrap()(&mut state,event, main_state);
                 }
                 match event {
                     #[cfg(not(target_arch="wasm32"))]
@@ -58,11 +59,11 @@ pub fn run_event_loop(
                 let dt = now - last_render_time;
                 last_render_time = now;
                 if cam_update.is_some() {
-                    cam_update.unwrap()(&mut state, dt);
+                    cam_update.unwrap()(&mut state, dt, main_state);
                 }
                 state.update();
                 if update.is_some() {
-                    update.unwrap()(&mut state);
+                    update.unwrap()(&mut state, main_state);
                 }
 
                 match render(&mut state) {
