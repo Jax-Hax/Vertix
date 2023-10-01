@@ -19,11 +19,34 @@ impl Box2D {
     pub fn check_collision(&self, pos: &PhysicalPosition<f32>) -> bool {
         let x = pos.x;
         let y = pos.y;
-        println!("x: {}, {}", self.x_max , self.x_min);
-        println!("y: {}, {}", self.y_max, self.y_min);
-        println!("coords: {}, {}", x, y);
         if x < self.x_max && x > self.x_min && y < self.y_max && y > self.y_min {
-            println!("it collided");
+            return true;
+        }
+        return false;
+    }
+}
+pub struct Circle {
+    center_x: f32,
+    center_y: f32,
+    radius: f32,
+}
+impl Circle {
+    pub fn new(center: Vec2, radius: f32) -> Self{
+        Circle {
+            center_x: center.x,
+            center_y: center.y,
+            radius
+        }
+    }
+    pub fn check_collision(&self, pos: &PhysicalPosition<f32>) -> bool {
+        let x = pos.x;
+        let y = pos.y;
+        //find distance betweenn two points
+        let dist_x = (x - self.center_x).powi(2);
+        let dist_y = (y - self.center_y).powi(2);
+        let dist = (dist_x + dist_y).sqrt();
+        if dist < self.radius {
+            println!("collision");
             return true;
         }
         return false;
