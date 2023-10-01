@@ -45,14 +45,15 @@ pub struct Instance {
     pub position: Vec3,
     pub rotation: Quat,
     pub color: [f32; 4],
+    pub is_world_space: bool
 }
 
 impl Instance {
-    pub fn new(position: Vec3, rotation: Quat) -> Self {
-        Self {position,rotation, color: [1.0,1.0,1.0,1.0]}
+    pub fn new(position: Vec3, rotation: Quat, is_world_space: bool) -> Self {
+        Self {position,rotation, color: [1.0,1.0,1.0,1.0],is_world_space}
     }
-    pub fn new_with_color(position: Vec3, rotation: Quat, color: [f32; 4]) -> Self {
-        Self {position,rotation, color}
+    pub fn new_with_color(position: Vec3, rotation: Quat, color: [f32; 4], is_world_space: bool) -> Self {
+        Self {position,rotation, color, is_world_space}
     }
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw {

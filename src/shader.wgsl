@@ -6,8 +6,6 @@ struct Camera {
 }
 @group(1) @binding(0)
 var<uniform> camera: Camera;
-@group(2) @binding(0)
-var<uniform> is_world_space: u32;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,

@@ -1,13 +1,9 @@
 use std::iter;
-
-use hecs::World;
-use wgpu::RenderPass;
-
 use crate::{
     model::DrawModel,
-    prelude::{InstanceContainer, WorldSpace},
+    prelude::InstanceContainer,
     state::State,
-    structs::{MeshType, ScreenSpace},
+    structs::MeshType,
 };
 
 pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
@@ -49,7 +45,6 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
         });
         render_pass.set_pipeline(&state.render_pipeline);
         render_pass.set_bind_group(1, &state.camera.bind_group, &[]);
-        render_pass.set_bind_group(2, &state.world_space_bind_group, &[]);
         let world = &mut state.world;
         for (_entity, (game_object,)) in world.query_mut::<(&InstanceContainer,)>() {
             render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));

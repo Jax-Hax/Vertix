@@ -2,7 +2,6 @@ use glam::{Quat, Vec3};
 use vertix::{
     camera::{default_3d_cam, Camera},
     prelude::*,
-    structs::WorldSpace,
 };
 use winit::event::WindowEvent;
 
@@ -39,8 +38,8 @@ pub async fn run() {
         .create_model_instances("cube.obj", instances, true)
         .await;
     match is_dynamic {
-        Some(_) => state.world.spawn((container, IsDynamic, WorldSpace,)),
-        None => state.world.spawn((container, WorldSpace,)),
+        Some(_) => state.world.spawn((container, IsDynamic,)),
+        None => state.world.spawn((container,)),
     };
     //render loop
     run_event_loop(
