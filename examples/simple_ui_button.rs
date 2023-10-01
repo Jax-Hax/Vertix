@@ -37,7 +37,7 @@ pub async fn run() {
         vertices,
         indices,
         instances,
-        state.compile_material("rounded_rect.jpg").await,
+        state.compile_material("rounded_rect.png").await,
         false,
     );
     match is_dynamic {
@@ -52,7 +52,7 @@ fn input(state: &mut State, event: &WindowEvent) {
     match event {
         WindowEvent::CursorMoved { position, .. } => {
             let pos = state.window.normalize_position(position);
-            for (_entity, (game_object, collider,)) in state
+            for (_entity, (_game_object, collider,)) in state
                 .world
                 .query_mut::<(&mut InstanceContainer, &Box2D,)>()
             {

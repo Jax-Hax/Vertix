@@ -17,7 +17,7 @@ struct InstanceInput {
     @location(7) model_matrix_2: vec4<f32>,
     @location(8) model_matrix_3: vec4<f32>,
     @location(9) color: vec4<f32>,
-    @location(10) is_world_space: bool,
+    @location(10) is_world_space: u32,
 }
 
 struct VertexOutput {
