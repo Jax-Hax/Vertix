@@ -1,5 +1,4 @@
 use hecs::World;
-use std::iter;
 use wgpu::{util::DeviceExt, BindGroup, Buffer};
 use winit::{
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
@@ -9,11 +8,11 @@ use winit::{
 
 use crate::{
     camera::{Camera, CameraStruct},
-    model::{DrawModel, Material},
-    prelude::{Vertex, WorldSpace},
+    model::Material,
+    prelude::Vertex,
     resources::{self, load_texture},
     shader,
-    structs::{CameraController, Instance, InstanceContainer, IsDynamic, MeshType, SingleMesh, ScreenSpace},
+    structs::{CameraController, Instance, InstanceContainer, IsDynamic, MeshType, SingleMesh},
     texture, window,
 };
 
