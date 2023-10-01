@@ -36,7 +36,7 @@ pub async fn run() {
         vertices,
         indices,
         instances,
-        state.compile_material("cube-diffuse.jpg").await,
+        state.compile_material("rounded_rect.jpg").await,
         false,
     );
     match is_dynamic {
