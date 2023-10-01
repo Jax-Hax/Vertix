@@ -309,7 +309,7 @@ pub async fn build_chunk(
         .build_mesh(
             vertices,
             indices,
-            vec![Instance::new(position, rotation)],
+            vec![Instance::new(position, rotation, true)],
             material,false
         );
     match is_dynamic {

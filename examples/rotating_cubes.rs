@@ -30,7 +30,7 @@ pub async fn run() {
 
                 let rotation = Quat::from_axis_angle(position.normalize(), f32::to_radians(45.0));
 
-                Instance::new(position, rotation)
+                Instance::new(position, rotation, true)
             })
         })
         .collect::<Vec<_>>();

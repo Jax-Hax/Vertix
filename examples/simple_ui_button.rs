@@ -31,6 +31,7 @@ pub async fn run() {
         },
         Quat::IDENTITY,
         [1.0, 0.0, 0.0, 1.0],
+        false
     )];
     let (container, is_dynamic) = state.build_mesh(
         vertices,

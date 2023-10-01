@@ -17,6 +17,7 @@ struct InstanceInput {
     @location(7) model_matrix_2: vec4<f32>,
     @location(8) model_matrix_3: vec4<f32>,
     @location(9) color: vec4<f32>,
+    @location(10) is_world_space: bool,
 }
 
 struct VertexOutput {
@@ -40,7 +41,7 @@ fn vs_main(
     var out: VertexOutput;
     out.tex_coords = model.tex_coords;
     out.color = instance.color;
-    if (is_world_space == u32(1)) {
+    if (instance.is_world_space == u32(1)) {
         out.clip_position = camera.view_proj * world_position;
     }
     else {
