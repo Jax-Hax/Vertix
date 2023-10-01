@@ -47,7 +47,7 @@ pub async fn run() {
     //render loop
     run_event_loop(state, main_state, event_loop, None, Some(input), Some(default_3d_cam));
 }
-fn input(state: &mut State, event: &WindowEvent, main_state: MainState) {
+fn input(state: &mut State, event: &WindowEvent, main_state: &mut MainState) {
     //keyboard inputs
     match event {
         WindowEvent::CursorMoved { position, .. } => {

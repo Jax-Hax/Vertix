@@ -54,19 +54,28 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
             .write_buffer(&state.uniform_buffer, 0, bytemuck::cast_slice(&[1]));
         render_pass.set_bind_group(2, &state.world_space_bind_group, &[]);
         let world = &mut state.world;
-        world_space(world);
-        state
-            .queue
-            .write_buffer(&state.uniform_buffer, 0, bytemuck::cast_slice(&[0]));
-        render_pass.set_bind_group(2, &state.world_space_bind_group, &[]);
-        screen_space(world);
+        for (_entity, (game_object, _)) in world.query_mut::<(&InstanceContainer, &WorldSpace)>() {
+            render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
+            match &game_object.mesh_type {
+                MeshType::Model(model) => {
+                    render_pass.draw_model_instanced(&model, 0..game_object.length);
+                }
+                MeshType::SingleMesh(mesh) => {
+                    render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+                    render_pass
+                        .set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+                    render_pass.set_bind_group(0, &mesh.material.bind_group, &[]);
+                    render_pass.draw_indexed(0..mesh.num_elements, 0, 0..1);
+                }
+            }
+        }
     }
 
     state.queue.submit(iter::once(encoder.finish()));
     output.present();
 
     Ok(())
-}
+}/*
 fn world_space(world: &mut World) {
     for (_entity, (game_object, _)) in world.query_mut::<(&InstanceContainer, &WorldSpace)>() {
         render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
@@ -100,4 +109,4 @@ fn screen_space(world: &mut World) {
             }
         }
     }
-}
+} */

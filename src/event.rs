@@ -2,13 +2,13 @@ use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, Wi
 
 use crate::{state::State, render::render};
 
-pub fn run_event_loop<T>(
+pub fn run_event_loop<T: 'static>(
     mut state: State,
-    main_state: T,
+    mut main_state: T,
     event_loop: EventLoop<()>,
-    update: Option<fn(&mut State, T)>,
-    input: Option<fn(&mut State, &WindowEvent, T)>,
-    cam_update: Option<fn (&mut State, dt: std::time::Duration, T)>,
+    update: Option<fn(&mut State, &mut T)>,
+    input: Option<fn(&mut State, &WindowEvent, &mut T)>,
+    cam_update: Option<fn (&mut State, dt: std::time::Duration, &mut T)>,
 ) {
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
@@ -28,7 +28,7 @@ pub fn run_event_loop<T>(
             } if window_id == state.window().id() => {
                 state.input(event);
                 if input.is_some() {
-                    input.unwrap()(&mut state,event, main_state);
+                    input.unwrap()(&mut state,event, &mut main_state);
                 }
                 match event {
                     #[cfg(not(target_arch="wasm32"))]
@@ -59,11 +59,11 @@ pub fn run_event_loop<T>(
                 let dt = now - last_render_time;
                 last_render_time = now;
                 if cam_update.is_some() {
-                    cam_update.unwrap()(&mut state, dt, main_state);
+                    cam_update.unwrap()(&mut state, dt, &mut main_state);
                 }
                 state.update();
                 if update.is_some() {
-                    update.unwrap()(&mut state, main_state);
+                    update.unwrap()(&mut state, &mut main_state);
                 }
 
                 match render(&mut state) {
