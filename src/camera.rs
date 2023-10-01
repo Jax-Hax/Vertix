@@ -144,7 +144,7 @@ impl Projection {
     }
 }
 
-pub fn default_3d_cam<T>(state: &mut State, dt: Duration, _: T) {
+pub fn default_3d_cam(state: &mut State, dt: Duration) {
     let dt = dt.as_secs_f32();
     let mut camera = &mut state.camera.camera_transform;
     let mut controller = &mut state.camera.camera_controller;

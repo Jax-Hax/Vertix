@@ -44,11 +44,10 @@ pub async fn run() {
         Some(_) => state.world.spawn((container, collider, IsDynamic)),
         None => state.world.spawn((container, collider)),
     };
-    let main_state = MainState{};
     //render loop
-    run_event_loop(state, main_state, event_loop, None, Some(input), Some(default_3d_cam));
+    run_event_loop(state, event_loop, None, Some(input), Some(default_3d_cam));
 }
-fn input(state: &mut State, event: &WindowEvent, main_state: &mut MainState) {
+fn input(state: &mut State, event: &WindowEvent) {
     //keyboard inputs
     match event {
         WindowEvent::CursorMoved { position, .. } => {
@@ -62,7 +61,4 @@ fn input(state: &mut State, event: &WindowEvent, main_state: &mut MainState) {
         }
         _ => {}
     }
-}
-struct MainState{
-
 }
