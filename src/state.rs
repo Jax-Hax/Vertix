@@ -1,5 +1,5 @@
 use hecs::World;
-use wgpu::{util::DeviceExt, BindGroup, Buffer};
+use wgpu::util::DeviceExt;
 use winit::{
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
     event_loop::EventLoop,
@@ -29,8 +29,6 @@ pub struct State {
     pub mouse_locked: bool,
     pub world: World,
     build_path: String,
-    pub world_space_bind_group: BindGroup,
-    pub uniform_buffer: Buffer,
     pub mouse_pos: PhysicalPosition<f64>
 }
 
@@ -113,40 +111,12 @@ impl State {
 
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
-
-        let world_space_bgl = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
-            label: Some("camera_bind_group_layout"),
-        });
-        let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("bool buffer"),
-            contents: bytemuck::cast_slice(&[1]),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
-        let world_space_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &world_space_bgl,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: uniform_buffer.as_entire_binding(),
-            }],
-            label: Some("world_space_bind_group"),
-        });
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
                     &texture_bind_group_layout,
                     &camera.bind_group_layout,
-                    &world_space_bgl,
                 ],
                 push_constant_ranges: &[],
             });
@@ -173,8 +143,6 @@ impl State {
                 mouse_locked: mouse_lock,
                 world: World::new(),
                 build_path: build_path.to_string(),
-                world_space_bind_group,
-                uniform_buffer,
                 mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }
             },
             event_loop,
