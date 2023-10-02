@@ -64,7 +64,6 @@ pub fn run_event_loop(
                 if update.is_some() {
                     update.unwrap()(&mut state);
                 }
-
                 match render(&mut state) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
