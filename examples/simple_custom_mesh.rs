@@ -20,17 +20,14 @@ pub async fn run() {
         [1.0,0.0,0.0,1.0],
         true
     )];
-    let (container, is_dynamic) = state.build_mesh(
+    let container = state.build_mesh(
         vertices,
         indices,
         instances,
         state.compile_material("cube-diffuse.jpg").await,
         false,
     );
-    match is_dynamic {
-        Some(_) => state.world.spawn((container, IsDynamic,)),
-        None => state.world.spawn((container,)),
-    };
+    state.world.spawn((container,));
     //render loop
     run_event_loop(state, event_loop, None, None, Some(default_3d_cam));
 }

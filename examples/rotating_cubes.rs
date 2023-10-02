@@ -34,13 +34,10 @@ pub async fn run() {
             })
         })
         .collect::<Vec<_>>();
-    let (container, is_dynamic) = state
+    let container = state
         .create_model_instances("cube.obj", instances, true)
         .await;
-    match is_dynamic {
-        Some(_) => state.world.spawn((container, IsDynamic,)),
-        None => state.world.spawn((container,)),
-    };
+    state.world.spawn((container,));
     //render loop
     run_event_loop(
         state,
@@ -52,9 +49,9 @@ pub async fn run() {
 }
 
 fn update(state: &mut State) {
-    for (_entity, (game_object, _)) in state
+    for (_entity, (game_object,)) in state
         .world
-        .query_mut::<(&mut InstanceContainer, &IsDynamic)>()
+        .query_mut::<(&mut InstanceContainer,)>()
     {
         for instance in &mut game_object.instances {
             instance.position[0] += 0.01;
@@ -71,9 +68,9 @@ fn input(state: &mut State, event: &WindowEvent) {
                 virtual_keycode: Some(VirtualKeyCode::F),
                 ..
             } => {
-                for (_entity, (game_object, _)) in state
+                for (_entity, (game_object, )) in state
                     .world
-                    .query_mut::<(&mut InstanceContainer, &IsDynamic)>()
+                    .query_mut::<(&mut InstanceContainer,)>()
                 {
                     for instance in &mut game_object.instances {
                         instance.position[1] += 0.001;

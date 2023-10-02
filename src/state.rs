@@ -12,7 +12,7 @@ use crate::{
     prelude::Vertex,
     resources::{self, load_texture},
     shader,
-    structs::{CameraController, Instance, InstanceContainer, IsDynamic, MeshType, SingleMesh},
+    structs::{CameraController, Instance, InstanceContainer, MeshType, SingleMesh},
     texture, window,
 };
 
@@ -206,7 +206,7 @@ impl State {
         model: &str,
         instances: Vec<Instance>,
         is_updating: bool,
-    ) -> (InstanceContainer, Option<IsDynamic>) {
+    ) -> InstanceContainer {
         let loaded_model = resources::load_model(
             model,
             &self.build_path,
@@ -230,11 +230,7 @@ impl State {
             });
         let container =
             InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
-        if is_updating {
-            (container, Some(IsDynamic()))
-        } else {
-            (container, None)
-        }
+        container
     }
     pub async fn compile_material(&self, texture_name: &str) -> Material {
         let diffuse_texture =
@@ -266,7 +262,7 @@ impl State {
         instances: Vec<Instance>,
         material: Material,
         is_updating: bool,
-    ) -> (InstanceContainer, Option<IsDynamic>) {
+    ) -> InstanceContainer {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -302,10 +298,6 @@ impl State {
             });
         let container =
             InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances);
-        if is_updating {
-            (container, Some(IsDynamic()))
-        } else {
-            (container, None)
-        }
+        container
     }
 }

@@ -305,17 +305,14 @@ pub async fn build_chunk(
     };
     let rotation = Quat::from_axis_angle(position.normalize(), f32::to_radians(0.0));
     
-    let (container, is_dynamic) = state
+    let container = state
         .build_mesh(
             vertices,
             indices,
             vec![Instance::new(position, rotation, true)],
             material,false
         );
-    match is_dynamic {
-        Some(_) => state.world.spawn((container,IsDynamic,)),
-        None => state.world.spawn((container,)),
-    };
+        state.world.spawn((container,));
     
 }
 
