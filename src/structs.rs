@@ -1,25 +1,34 @@
 use wgpu::{Buffer, Queue};
 
+use crate::model::{Material, Model};
+use glam::{Mat4, Quat, Vec3};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-use glam::{Vec3, Quat, Mat4};
-use winit::{event::{VirtualKeyCode, ElementState, MouseScrollDelta}, dpi::PhysicalPosition};
-use crate::model::{Model, Material};
-pub struct InstanceContainer {
-    pub length: u32,
-    pub buffer: Buffer,
-    pub mesh_type: MeshType,
-    pub instances: Vec<Instance>,
+use winit::{
+    dpi::PhysicalPosition,
+    event::{ElementState, MouseScrollDelta, VirtualKeyCode},
+};
+pub trait InstanceTrait {
+    fn to_raw(&self) -> InstanceRaw;
+}
+pub trait InstanceContainerTrait {
+    
 }
 pub enum MeshType {
     Model(Model),
     SingleMesh(SingleMesh),
 }
-pub struct SingleMesh{
+pub struct SingleMesh {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub num_elements: u32,
     pub material: Material,
+}
+pub struct InstanceContainer {
+    length: u32,
+    buffer: Buffer,
+    mesh_type: MeshType,
+    instances: Vec<Instance>,
 }
 impl InstanceContainer {
     pub fn new(buffer: Buffer, mesh_type: MeshType, instances: Vec<Instance>) -> Self {
@@ -41,39 +50,55 @@ impl InstanceContainer {
     }
 }
 pub struct Instance {
-    pub position: Vec3,
-    pub rotation: Quat,
-    pub color: [f32; 4],
-    pub is_world_space: bool
+    position: Vec3,
+    rotation: Quat,
+    color: [f32; 4],
+    is_world_space: bool,
 }
 
 impl Instance {
     pub fn new(position: Vec3, rotation: Quat, is_world_space: bool) -> Self {
-        Self {position,rotation, color: [1.0,1.0,1.0,1.0],is_world_space}
-    }
-    pub fn new_with_color(position: Vec3, rotation: Quat, color: [f32; 4], is_world_space: bool) -> Self {
-        Self {position,rotation, color, is_world_space}
-    }
-    pub fn to_raw(&self) -> InstanceRaw {
-        InstanceRaw {
-            model: Mat4::from_rotation_translation(self.rotation,self.position)
-            .to_cols_array_2d(),
-            color: self.color,
-            is_world_space: if self.is_world_space {1} else {0}
+        Self {
+            position,
+            rotation,
+            color: [1.0, 1.0, 1.0, 1.0],
+            is_world_space,
         }
     }
+    pub fn new_with_color(
+        position: Vec3,
+        rotation: Quat,
+        color: [f32; 4],
+        is_world_space: bool,
+    ) -> Self {
+        Self {
+            position,
+            rotation,
+            color,
+            is_world_space,
+        }
+    }
+    pub fn to_raw(&self) -> InstanceRaw {
+        InstanceRaw::new(self.position, self.rotation, self.color, self.is_world_space)
+    }
 }
-
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct InstanceRaw {
     model: [[f32; 4]; 4],
     color: [f32; 4],
-    is_world_space: u32
+    is_world_space: u32,
 }
 
 impl InstanceRaw {
+    pub fn new(position: Vec3, rotation: Quat, color: [f32; 4], is_world_space: bool) -> Self {
+        Self {
+            model: Mat4::from_rotation_translation(rotation, position).to_cols_array_2d(),
+            color: color,
+            is_world_space: if is_world_space { 1 } else { 0 },
+        }
+    }
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
         use std::mem;
         wgpu::VertexBufferLayout {
@@ -131,7 +156,10 @@ pub struct Vertex {
 
 impl Vertex {
     pub fn new(position: [f32; 3], tex_coords: [f32; 2]) -> Self {
-        Self { position, tex_coords }
+        Self {
+            position,
+            tex_coords,
+        }
     }
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
         use std::mem;
@@ -234,5 +262,3 @@ impl CameraController {
         };
     }
 }
-
-
