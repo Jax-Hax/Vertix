@@ -12,7 +12,9 @@ pub trait InstanceTrait {
     fn to_raw(&self) -> InstanceRaw;
 }
 pub trait InstanceContainerTrait {
-    
+    fn update(&self, queue: &Queue) {
+        
+    }
 }
 pub enum MeshType {
     Model(Model),
@@ -49,7 +51,7 @@ impl InstanceContainer {
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&instance_data));
     }
 }
-pub struct Instance {
+ struct Instance {
     position: Vec3,
     rotation: Quat,
     color: [f32; 4],
