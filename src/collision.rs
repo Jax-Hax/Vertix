@@ -27,9 +27,11 @@ impl Box2D {
     pub fn check_collision(&self, pos: &PhysicalPosition<f32>) -> bool {
         let x = pos.x;
         let y = pos.y;
-        if x < self.x_max && x > self.x_min && y < self.y_max && y > self.y_min {
-            println!("collision");
-            return true;
+        if self.enabled{
+            if x < self.x_max && x > self.x_min && y < self.y_max && y > self.y_min {
+                println!("collision");
+                return true;
+            }
         }
         return false;
     }
@@ -38,13 +40,15 @@ pub struct Circle {
     center_x: f32,
     center_y: f32,
     radius: f32,
+    enabled: bool,
 }
 impl Circle {
-    pub fn new(center: Vec2, radius: f32) -> Self{
+    pub fn new(center: Vec2, radius: f32, enabled: bool) -> Self{
         Circle {
             center_x: center.x,
             center_y: center.y,
-            radius
+            radius,
+            enabled
         }
     }
     pub fn check_collision(&self, pos: &PhysicalPosition<f32>) -> bool {
@@ -54,7 +58,7 @@ impl Circle {
         let dist_x = (x - self.center_x).powi(2);
         let dist_y = (y - self.center_y).powi(2);
         let dist = (dist_x + dist_y).sqrt();
-        if dist < self.radius {
+        if self.enabled && dist < self.radius {
             println!("collision");
             return true;
         }

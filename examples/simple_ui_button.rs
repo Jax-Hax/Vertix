@@ -1,4 +1,4 @@
-use glam::{Quat, Vec2, Vec3};
+use glam::{Vec2, Vec3};
 use vertix::{
     camera::{default_3d_cam, Camera},
     collision::Box2D,
@@ -25,9 +25,9 @@ pub async fn run() {
     let collider = Box2D::new(p1,p2);
     state.world.spawn((Instance {is_world_space: false, ..Default::default()}, collider));
     let mut instances = vec![];
-    for (_entity, (game_object, _collider,)) in state
+    for (_entity, (game_object, ..)) in state
         .world
-        .query_mut::<(&mut Instance, &Box2D,)>()
+        .query_mut::<(&Instance, &Box2D,)>()
     {
         instances.push(game_object.to_raw());
     }

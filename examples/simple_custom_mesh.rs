@@ -1,5 +1,6 @@
 use glam::{Vec3, Quat, Vec2};
-use vertix::{prelude::*, camera::{Camera, default_3d_cam}, primitives::rect};
+use hecs::World;
+use vertix::{prelude::*, camera::{Camera, default_3d_cam}, primitives::rect, structs::InstanceRaw};
 fn main() {
     pollster::block_on(run());
 }
@@ -10,16 +11,8 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //custom mesh
     let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
-    let instances = vec![Instance::new_with_color(
-        Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        },
-        Quat::IDENTITY,
-        [1.0,0.0,0.0,1.0],
-        true
-    )];
+    state.world.spawn((Instance {is_world_space: false, ..Default::default()},));
+    let instances = update_instances(&mut state.world);
     let container = state.build_mesh(
         vertices,
         indices,
@@ -30,4 +23,13 @@ pub async fn run() {
     state.world.spawn((container,));
     //render loop
     run_event_loop(state, event_loop, None, None, Some(default_3d_cam));
+}
+fn update_instances(world: &mut World) -> Vec<InstanceRaw>{
+    let mut instances = vec![];
+    for (_entity, (game_object,)) in world
+        .query_mut::<(&mut Instance,)>()
+    {
+        instances.push(game_object.to_raw());
+    }
+    instances
 }
