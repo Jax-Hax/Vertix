@@ -1,5 +1,4 @@
 use std::iter;
-use hecs::Query;
 
 use crate::{
     model::DrawModel,
@@ -8,7 +7,7 @@ use crate::{
     structs::MeshType,
 };
 
-pub fn render(state: &mut State, render_fn: Option<fn(&mut State)>) -> Result<(), wgpu::SurfaceError> {
+pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
     let output = state.window.surface.get_current_texture()?;
     let view = output
         .texture
@@ -47,7 +46,7 @@ pub fn render(state: &mut State, render_fn: Option<fn(&mut State)>) -> Result<()
         });
         render_pass.set_pipeline(&state.render_pipeline);
         render_pass.set_bind_group(1, &state.camera.bind_group, &[]);
-        for (_entity, (game_object,)) in state.world.query_mut::<query>() {
+        for (_entity, (game_object,)) in state.world.query_mut::<(&InstanceContainer,)>() {
             render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
             match &game_object.mesh_type {
                 MeshType::Model(model) => {

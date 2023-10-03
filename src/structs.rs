@@ -8,14 +8,6 @@ use winit::{
     dpi::PhysicalPosition,
     event::{ElementState, MouseScrollDelta, VirtualKeyCode},
 };
-pub trait InstanceTrait {
-    fn to_raw(&self) -> InstanceRaw;
-}
-pub trait InstanceContainerTrait {
-    fn update(&self, queue: &Queue) {
-        
-    }
-}
 pub enum MeshType {
     Model(Model),
     SingleMesh(SingleMesh),
@@ -27,59 +19,41 @@ pub struct SingleMesh {
     pub material: Material,
 }
 pub struct InstanceContainer {
-    length: u32,
-    buffer: Buffer,
-    mesh_type: MeshType,
-    instances: Vec<Instance>,
+    pub length: u32,
+    pub buffer: Buffer,
+    pub mesh_type: MeshType,
 }
 impl InstanceContainer {
-    pub fn new(buffer: Buffer, mesh_type: MeshType, instances: Vec<Instance>) -> Self {
+    pub fn new(buffer: Buffer, mesh_type: MeshType, length: u32) -> Self {
         Self {
             buffer,
             mesh_type,
-            length: instances.len() as u32,
-            instances,
+            length,
         }
     }
-    pub fn update(&self, queue: &Queue) {
+    pub fn update(&mut self, instances: Vec<Instance>, queue: &Queue) {
         //optional, must call after you change position or rotation to update it in buffer, also when you add an instance
-        let instance_data = self
-            .instances
+        let instance_data = instances
             .iter()
             .map(Instance::to_raw)
             .collect::<Vec<_>>();
         queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&instance_data));
+        self.length = instances.len() as u32;
     }
 }
- struct Instance {
-    position: Vec3,
-    rotation: Quat,
-    color: [f32; 4],
-    is_world_space: bool,
+pub struct Instance {
+    pub position: Vec3,
+    pub rotation: Quat,
+    pub color: [f32; 4],
+    pub is_world_space: bool,
+}
+impl Default for Instance {
+    fn default() -> Self {
+        Instance { position: Vec3::ZERO, rotation: Quat::IDENTITY, color: [1.0,1.0,1.0,1.0], is_world_space: true }
+    }
 }
 
 impl Instance {
-    pub fn new(position: Vec3, rotation: Quat, is_world_space: bool) -> Self {
-        Self {
-            position,
-            rotation,
-            color: [1.0, 1.0, 1.0, 1.0],
-            is_world_space,
-        }
-    }
-    pub fn new_with_color(
-        position: Vec3,
-        rotation: Quat,
-        color: [f32; 4],
-        is_world_space: bool,
-    ) -> Self {
-        Self {
-            position,
-            rotation,
-            color,
-            is_world_space,
-        }
-    }
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw::new(self.position, self.rotation, self.color, self.is_world_space)
     }

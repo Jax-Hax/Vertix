@@ -229,7 +229,7 @@ impl State {
                 },
             });
         let container =
-            InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances);
+            InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32);
         container
     }
     pub async fn compile_material(&self, texture_name: &str) -> Material {
@@ -297,7 +297,7 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let container =
-            InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances);
+            InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32);
         container
     }
 }
