@@ -204,7 +204,7 @@ impl State {
     pub async fn create_model_instances(
         &mut self,
         model: &str,
-        instances: Vec<Instance>,
+        instances: Vec<InstanceRaw>,
         is_updating: bool,
     ) -> InstanceContainer {
         let loaded_model = resources::load_model(
@@ -216,12 +216,11 @@ impl State {
         )
         .await
         .unwrap();
-        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         let instance_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
-                contents: bytemuck::cast_slice(&instance_data),
+                contents: bytemuck::cast_slice(&instances),
                 usage: if is_updating {
                     wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
                 } else {
@@ -285,7 +284,7 @@ impl State {
             vertex_buffer,
             index_buffer,
             num_elements: indices.len() as u32,
-            material: material,
+            material,
         };
         let instance_buffer = self
             .device

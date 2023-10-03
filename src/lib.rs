@@ -12,7 +12,7 @@ pub mod event;
 mod render;
 pub mod prelude {
     pub use crate::{
-        structs::{Instance,InstanceContainer},
+        structs::{Instance,InstanceContainer,InstanceRaw},
         event::run_event_loop,
         state::State,
         structs::Vertex,

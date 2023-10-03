@@ -1,4 +1,5 @@
 use glam::{Quat, Vec3};
+use hecs::World;
 use vertix::{
     camera::{default_3d_cam, Camera},
     prelude::*,
@@ -30,12 +31,14 @@ pub async fn run() {
 
                 let rotation = Quat::from_axis_angle(position.normalize(), f32::to_radians(45.0));
 
-                Instance::new(position, rotation, true)
+                (Instance { position, rotation, ..Default::default() },)
             })
         })
         .collect::<Vec<_>>();
+    state.world.spawn_batch(instances);
+    let instances_raw = update_instances(&mut state.world);
     let container = state
-        .create_model_instances("cube.obj", instances, true)
+        .create_model_instances("cube.obj", instances_raw, true)
         .await;
     state.world.spawn((container,));
     //render loop
@@ -82,4 +85,13 @@ fn input(state: &mut State, event: &WindowEvent) {
         },
         _ => {}
     }
+}
+fn update_instances(world: &mut World) -> Vec<InstanceRaw>{
+    let mut instances = vec![];
+    for (_entity, (game_object,)) in world
+        .query_mut::<(&mut Instance,)>()
+    {
+        instances.push(game_object.to_raw());
+    }
+    instances
 }
