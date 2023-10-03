@@ -46,44 +46,24 @@ pub async fn run() {
         state,
         event_loop,
         Some(update),
-        Some(input),
+        None,
         Some(default_3d_cam),
     );
 }
 
 fn update(state: &mut State) {
+    for (_entity, (instance,)) in state
+        .world
+        .query_mut::<(&mut Instance,)>()
+    {
+        instance.position[0] += 0.01;
+    }
+    let instances = update_instances(&mut state.world);
     for (_entity, (game_object,)) in state
         .world
-        .query_mut::<(&mut InstanceContainer,)>()
+        .query_one_mut::<(&mut InstanceContainer,)>()
     {
-        for instance in &mut game_object.instances {
-            instance.position[0] += 0.01;
-        }
-        game_object.update(&state.queue);
-    }
-}
-fn input(state: &mut State, event: &WindowEvent) {
-    //keyboard inputs
-    match event {
-        WindowEvent::KeyboardInput { input, .. } => match input {
-            KeyboardInput {
-                state: ElementState::Pressed,
-                virtual_keycode: Some(VirtualKeyCode::F),
-                ..
-            } => {
-                for (_entity, (game_object, )) in state
-                    .world
-                    .query_mut::<(&mut InstanceContainer,)>()
-                {
-                    for instance in &mut game_object.instances {
-                        instance.position[1] += 0.001;
-                    }
-                    game_object.update(&state.queue);
-                }
-            }
-            _ => {}
-        },
-        _ => {}
+        game_object.update(instances, &state.queue);
     }
 }
 fn update_instances(world: &mut World) -> Vec<InstanceRaw>{

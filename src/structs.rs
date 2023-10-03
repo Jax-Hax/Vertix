@@ -31,13 +31,9 @@ impl InstanceContainer {
             length,
         }
     }
-    pub fn update(&mut self, instances: Vec<Instance>, queue: &Queue) {
+    pub fn update(&mut self, instances: Vec<InstanceRaw>, queue: &Queue) {
         //optional, must call after you change position or rotation to update it in buffer, also when you add an instance
-        let instance_data = instances
-            .iter()
-            .map(Instance::to_raw)
-            .collect::<Vec<_>>();
-        queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&instance_data));
+        queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&instances));
         self.length = instances.len() as u32;
     }
 }
