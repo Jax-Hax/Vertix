@@ -24,12 +24,17 @@ pub async fn run() {
     let (vertices, indices) = rect(p1,p2);
     let collider = Box2D::new(p1,p2);
     state.world.spawn((Instance {is_world_space: false, ..Default::default()}, collider));
-    
-    
+    let mut instances = vec![];
+    for (_entity, (game_object, _collider,)) in state
+        .world
+        .query_mut::<(&mut Instance, &Box2D,)>()
+    {
+        instances.push(game_object.to_raw());
+    }
     let container = state.build_mesh(
         vertices,
         indices,
-        create_instances!(state, &Box2D),
+        instances,
         state.compile_material("rounded_rect.png").await,
         false,
     );
@@ -37,18 +42,7 @@ pub async fn run() {
     //render loop
     run_event_loop(state, event_loop, None, Some(input), Some(default_3d_cam));
 }
-#[macro_export]
-macro_rules! create_instances {
-    ($state:expr, $($query_ty:ty),*) => {{
-        let mut instances = vec![];
-        $(
-            for (_entity, (game_object, ..)) in $state.world.query_mut::<(&Instance, $query_ty,)>() {
-                instances.push(game_object.to_raw());
-            }
-        )*
-        instances
-    }};
-}
+
 fn input(state: &mut State, event: &WindowEvent) {
     //keyboard inputs
     match event {
