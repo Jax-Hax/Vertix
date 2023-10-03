@@ -28,6 +28,7 @@ impl Box2D {
         let x = pos.x;
         let y = pos.y;
         if x < self.x_max && x > self.x_min && y < self.y_max && y > self.y_min {
+            println!("collision");
             return true;
         }
         return false;

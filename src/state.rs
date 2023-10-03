@@ -1,4 +1,4 @@
-use hecs::World;
+use hecs::{World, QueryMut};
 use wgpu::util::DeviceExt;
 use winit::{
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
@@ -12,8 +12,8 @@ use crate::{
     prelude::Vertex,
     resources::{self, load_texture},
     shader,
-    structs::{CameraController, Instance, InstanceContainer, MeshType, SingleMesh},
-    texture, window,
+    structs::{CameraController, Instance, InstanceContainer, MeshType, SingleMesh, InstanceRaw},
+    texture, window, collision::Box2D,
 };
 
 pub struct State {
@@ -259,7 +259,7 @@ impl State {
         &mut self,
         vertices: Vec<Vertex>,
         indices: Vec<u32>,
-        instances: Vec<Instance>,
+        instances: Vec<InstanceRaw>,
         material: Material,
         is_updating: bool,
     ) -> InstanceContainer {
@@ -281,19 +281,17 @@ impl State {
                 contents: bytemuck::cast_slice(&indices),
                 usage: wgpu::BufferUsages::INDEX,
             });
-
         let mesh = SingleMesh {
             vertex_buffer,
             index_buffer,
             num_elements: indices.len() as u32,
             material: material,
         };
-        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         let instance_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
-                contents: bytemuck::cast_slice(&instance_data),
+                contents: bytemuck::cast_slice(&instances),
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let container =

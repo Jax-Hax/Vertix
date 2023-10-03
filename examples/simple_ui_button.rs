@@ -23,16 +23,14 @@ pub async fn run() {
     let p2 = Vec2::new(0.5, 0.5);
     let (vertices, indices) = rect(p1,p2);
     let collider = Box2D::new(p1,p2);
-    let instances = vec![Instance::new_with_color(
-        Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        },
-        Quat::IDENTITY,
-        [1.0, 0.0, 0.0, 1.0],
-        false
-    )];
+    state.world.spawn((Instance {is_world_space: false, ..Default::default()}, collider));
+    let mut instances = vec![];
+    for (_entity, (game_object, _collider,)) in state
+        .world
+        .query_mut::<(&mut Instance, &Box2D,)>()
+    {
+        instances.push(game_object.to_raw());
+    }
     let container = state.build_mesh(
         vertices,
         indices,
@@ -40,10 +38,11 @@ pub async fn run() {
         state.compile_material("rounded_rect.png").await,
         false,
     );
-    state.world.spawn((container, collider));
+    state.world.spawn((container,)); //this is where you spawn the container for the renderer
     //render loop
     run_event_loop(state, event_loop, None, Some(input), Some(default_3d_cam));
 }
+
 fn input(state: &mut State, event: &WindowEvent) {
     //keyboard inputs
     match event {
@@ -51,7 +50,7 @@ fn input(state: &mut State, event: &WindowEvent) {
             let pos = state.window.normalize_position(position);
             for (_entity, (_game_object, collider,)) in state
                 .world
-                .query_mut::<(&mut InstanceContainer, &Box2D,)>()
+                .query_mut::<(&mut Instance, &Box2D,)>()
             {
                 collider.check_collision(&pos);
             }
