@@ -206,7 +206,7 @@ impl State {
     pub async fn create_model_instances(
         &mut self,
         model: &str,
-        instances: &mut Vec<Instance>,
+        instances: Vec<&mut Instance>,
         is_updating: bool,
     ) {
         let loaded_model = resources::load_model(
@@ -265,7 +265,7 @@ impl State {
         &mut self,
         vertices: Vec<Vertex>,
         indices: Vec<u32>,
-        instances: &mut Vec<Instance>,
+        instances: Vec<&mut Instance>,
         material: Material,
         is_updating: bool,
     ) {

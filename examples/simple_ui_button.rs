@@ -25,11 +25,12 @@ pub async fn run() {
     let collider = Box2D::new(p1,p2);
     state.world.spawn((Instance {is_world_space: false, ..Default::default()}, collider));
     let mut instances = vec![];
+    //this is to demonstrate how you could get the instances from the world if you want to instead of making a vec from the get go
     for (_entity, (game_object, ..)) in state
         .world
         .query_mut::<(&Instance, &Box2D,)>()
     {
-        instances.push(game_object.to_raw());
+        instances.push(game_object);
     }
     let container = state.build_mesh(
         vertices,
