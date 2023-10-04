@@ -60,7 +60,7 @@ fn update(state: &mut State) {
     }
     let instances = update_instances(&mut state.world);
     for (_entity, (game_object,)) in state
-        .world
+        .world //possibly do something with querying via entities and storing the entity id with query_one, which should prob have a mainstate then
         .query_one_mut::<(&mut InstanceContainer,)>()
     {
         game_object.update(instances, &state.queue);

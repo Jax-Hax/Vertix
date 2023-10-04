@@ -29,7 +29,8 @@ pub struct State {
     pub mouse_locked: bool,
     pub world: World,
     build_path: String,
-    pub mouse_pos: PhysicalPosition<f64>
+    pub mouse_pos: PhysicalPosition<f64>,
+    pub entity_containers: Vec<InstanceContainer>
 }
 
 impl State {
@@ -143,7 +144,8 @@ impl State {
                 mouse_locked: mouse_lock,
                 world: World::new(),
                 build_path: build_path.to_string(),
-                mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }
+                mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },
+                entity_containers: vec![]
             },
             event_loop,
         )
@@ -204,9 +206,9 @@ impl State {
     pub async fn create_model_instances(
         &mut self,
         model: &str,
-        instances: Vec<InstanceRaw>,
+        instances: &mut Vec<Instance>,
         is_updating: bool,
-    ) -> InstanceContainer {
+    ) {
         let loaded_model = resources::load_model(
             model,
             &self.build_path,
@@ -216,11 +218,12 @@ impl State {
         )
         .await
         .unwrap();
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         let instance_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
-                contents: bytemuck::cast_slice(&instances),
+                contents: bytemuck::cast_slice(&instance_data),
                 usage: if is_updating {
                     wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
                 } else {
@@ -229,7 +232,11 @@ impl State {
             });
         let container =
             InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32);
-        container
+        self.entity_containers.push(container);
+        let index = self.entity_containers.len();
+        for instance in instances {
+            instance.container_index = index;
+        }
     }
     pub async fn compile_material(&self, texture_name: &str) -> Material {
         let diffuse_texture =
@@ -258,10 +265,10 @@ impl State {
         &mut self,
         vertices: Vec<Vertex>,
         indices: Vec<u32>,
-        instances: Vec<InstanceRaw>,
+        instances: Vec<Instance>,
         material: Material,
         is_updating: bool,
-    ) -> InstanceContainer {
+    ) {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -286,15 +293,20 @@ impl State {
             num_elements: indices.len() as u32,
             material,
         };
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         let instance_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
-                contents: bytemuck::cast_slice(&instances),
+                contents: bytemuck::cast_slice(&instance_data),
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let container =
             InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32);
-        container
+        self.entity_containers.push(container);
+        let index = self.entity_containers.len();
+        for instance in instances {
+            instance.container_index = index;
+        }
     }
 }
