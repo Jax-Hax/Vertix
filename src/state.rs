@@ -1,4 +1,4 @@
-use hecs::{World, QueryMut};
+use hecs::World;
 use wgpu::util::DeviceExt;
 use winit::{
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
@@ -12,8 +12,8 @@ use crate::{
     prelude::Vertex,
     resources::{self, load_texture},
     shader,
-    structs::{CameraController, Instance, InstanceContainer, MeshType, SingleMesh, InstanceRaw},
-    texture, window, collision::Box2D,
+    structs::{CameraController, Instance, InstanceContainer, MeshType, SingleMesh},
+    texture, window,
 };
 
 pub struct State {
@@ -265,7 +265,7 @@ impl State {
         &mut self,
         vertices: Vec<Vertex>,
         indices: Vec<u32>,
-        instances: Vec<Instance>,
+        instances: &mut Vec<Instance>,
         material: Material,
         is_updating: bool,
     ) {
