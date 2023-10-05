@@ -1,4 +1,4 @@
-use glam::{Quat, Vec3};
+use glam::Vec3;
 use noise::{NoiseFn, Perlin};
 use vertix::{prelude::*, model::Material, camera::{Camera, default_3d_cam}};
 #[derive(Copy, Clone, Default, Debug)]

@@ -1,6 +1,6 @@
 use wgpu::{Buffer, Queue};
 
-use crate::model::{Material, Model};
+use crate::{model::{Material, Model}, state::State};
 use glam::{Mat4, Quat, Vec3};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -54,6 +54,9 @@ impl Default for Instance {
 impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw::new(self.position, self.rotation, self.color, self.is_world_space)
+    }
+    pub fn update(&self, instances: Vec<InstanceRaw>, state: &mut State) {
+        state.entity_containers[self.container_index].update(instances, &state.queue);
     }
 }
 
