@@ -33,7 +33,7 @@ fn main() {
 }
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
-    let camera = Camera::new(Vec3::new(0.0, 5.0, 10.0), f32::to_radians(-90.0), f32::to_radians(-20.0));
+    let camera = Camera::new(Vec3::new(0.0, 50.0, 10.0), f32::to_radians(90.0), f32::to_radians(-20.0));
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
@@ -298,18 +298,11 @@ pub async fn build_chunk(
             }
         }
     }
-    let position = Vec3 {
-        x: 1.0,
-        y: 1.0,
-        z: 1.0,
-    };
-    let rotation = Quat::from_axis_angle(position.normalize(), f32::to_radians(0.0));
-    
     let container = state
         .build_mesh(
             vertices,
             indices,
-            vec![Instance::new(position, rotation, true)],
+            vec![&mut Instance{..Default::default()}], //since we are just discarding the instance afterward and not doing anything to it we don't need to add to world
             material,false
         );
         state.world.spawn((container,));
