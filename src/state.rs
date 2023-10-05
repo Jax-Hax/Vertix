@@ -1,5 +1,5 @@
-use hecs::World;
 use wgpu::util::DeviceExt;
+use bevy_ecs::world::World;
 use winit::{
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
     event_loop::EventLoop,
@@ -142,7 +142,7 @@ impl State {
                 texture_bind_group_layout,
                 mouse_pressed: false,
                 mouse_locked: mouse_lock,
-                world: World::new(),
+                world: World::default(),
                 build_path: build_path.to_string(),
                 mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },
                 entity_containers: vec![]
