@@ -218,7 +218,10 @@ impl State {
         )
         .await
         .unwrap();
-        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        let mut instance_data = vec![];
+        for instance in &instances {
+            instance_data.push(instance.to_raw());
+        }
         let instance_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -293,7 +296,10 @@ impl State {
             num_elements: indices.len() as u32,
             material,
         };
-        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        let mut instance_data = vec![];
+        for instance in &instances {
+            instance_data.push(instance.to_raw());
+        }
         let instance_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
