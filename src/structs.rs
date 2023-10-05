@@ -37,6 +37,7 @@ impl InstanceContainer {
         self.length = instances.len() as u32;
     }
 }
+#[derive(Debug, Copy, Clone)]
 pub struct Instance {
     pub position: Vec3,
     pub rotation: Quat,

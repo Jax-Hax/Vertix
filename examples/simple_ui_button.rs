@@ -23,15 +23,9 @@ pub async fn run() {
     let p2 = Vec2::new(0.5, 0.5);
     let (vertices, indices) = rect(p1,p2);
     let collider = Box2D::new(p1,p2);
-    state.world.spawn((Instance {is_world_space: false, ..Default::default()}, collider));
+    let mut instance = Instance {is_world_space: false, ..Default::default()};
     let mut instances = vec![];
-    //this is to demonstrate how you could get the instances from the world if you want to instead of making a vec from the get go
-    for (_entity, (game_object, ..)) in state
-        .world
-        .query_mut::<(&mut Instance, &Box2D,)>()
-    {
-        instances.push(game_object);
-    }
+    instances.push(&mut instance);
     state.build_mesh(
         vertices,
         indices,
@@ -39,6 +33,7 @@ pub async fn run() {
         state.compile_material("rounded_rect.png").await,
         false,
     );
+    state.world.spawn((instance, collider));
     //render loop
     run_event_loop(state, event_loop, None, Some(input), Some(default_3d_cam));
 }
