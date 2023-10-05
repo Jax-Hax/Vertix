@@ -28,18 +28,17 @@ pub async fn run() {
     //this is to demonstrate how you could get the instances from the world if you want to instead of making a vec from the get go
     for (_entity, (game_object, ..)) in state
         .world
-        .query_mut::<(&Instance, &Box2D,)>()
+        .query_mut::<(&mut Instance, &Box2D,)>()
     {
         instances.push(game_object);
     }
-    let container = state.build_mesh(
+    state.build_mesh(
         vertices,
         indices,
         instances,
         state.compile_material("rounded_rect.png").await,
         false,
     );
-    state.world.spawn((container,)); //this is where you spawn the container for the renderer
     //render loop
     run_event_loop(state, event_loop, None, Some(input), Some(default_3d_cam));
 }
