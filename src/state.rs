@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use wgpu::util::DeviceExt;
 use bevy_ecs::world::World;
 use winit::{
@@ -13,7 +15,7 @@ use crate::{
     resources::{self, load_texture},
     shader,
     structs::{CameraController, Instance, InstanceContainer, MeshType, SingleMesh},
-    texture, window,
+    texture, window, prefabs::Prefab,
 };
 
 pub struct State {
@@ -30,7 +32,7 @@ pub struct State {
     pub world: World,
     build_path: String,
     pub mouse_pos: PhysicalPosition<f64>,
-    pub entity_containers: Vec<InstanceContainer>
+    pub entity_containers: HashMap<Prefab>
 }
 
 impl State {
