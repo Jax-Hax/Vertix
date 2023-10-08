@@ -2,7 +2,7 @@ use wgpu::{Buffer, Queue};
 use hecs::World;
 use crate::{prelude::InstanceRaw, structs::MeshType};
 pub struct EventHandler{
-    pub update_fn: Option<fn(&mut Prefab, &mut World)>, //called once per frame
+    pub update_fn: Option<fn(&mut World) -> bool>, //called once per frame
     pub collision: Option<fn(&mut World)>, //called when a collision on this is detected
     pub on_click: Option<fn(&mut World)>, //called when it is clicked (if it has a collider)
     pub to_raw: fn(&mut World)-> Vec<InstanceRaw>, //called whenever it needs to be updated

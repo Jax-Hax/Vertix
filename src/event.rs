@@ -1,12 +1,10 @@
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::State, render::render};
+use crate::{state::State, render::render, prefabs::Prefab};
 
 pub fn run_event_loop(
     mut state: State,
     event_loop: EventLoop<()>,
-    update: Option<fn(&mut State)>,
-    input: Option<fn(&mut State, &WindowEvent)>,
     cam_update: Option<fn (&mut State, dt: std::time::Duration)>,
 ) {
     let mut last_render_time = instant::Instant::now();
@@ -26,9 +24,6 @@ pub fn run_event_loop(
                 window_id,
             } if window_id == state.window().id() => {
                 state.input(event);
-                if input.is_some() {
-                    input.unwrap()(&mut state,event);
-                }
                 match event {
                     #[cfg(not(target_arch="wasm32"))]
                     WindowEvent::CloseRequested
@@ -61,8 +56,14 @@ pub fn run_event_loop(
                     cam_update.unwrap()(&mut state, dt);
                 }
                 state.update();
-                if update.is_some() {
-                    update.unwrap()(&mut state);
+                state.world.
+                for (_entity, (prefab,)) in state
+                    .world
+                    .query_mut::<(&mut Prefab,)>()
+                {
+                    if prefab.event_handler.update_fn.is_some(){
+                        prefab.event_handler.update_fn.unwrap()(&mut state.world);
+                    }
                 }
                 match render(&mut state) {
                     Ok(_) => {}
