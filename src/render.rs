@@ -2,7 +2,6 @@ use std::iter;
 
 use crate::{
     model::DrawModel,
-    prelude::InstanceContainer,
     state::State,
     structs::MeshType,
 };

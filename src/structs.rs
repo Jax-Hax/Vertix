@@ -43,11 +43,10 @@ pub struct Instance {
     pub rotation: Quat,
     pub color: [f32; 4],
     pub is_world_space: bool,
-    pub container_index: usize,
 }
 impl Default for Instance {
     fn default() -> Self {
-        Instance { position: Vec3::ZERO, rotation: Quat::IDENTITY, color: [1.0,1.0,1.0,1.0], is_world_space: true, container_index: 0 }
+        Instance { position: Vec3::ZERO, rotation: Quat::IDENTITY, color: [1.0,1.0,1.0,1.0], is_world_space: true }
     }
 }
 
@@ -55,9 +54,9 @@ impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw::new(self.position, self.rotation, self.color, self.is_world_space)
     }
-    pub fn update(&self, instances: Vec<InstanceRaw>, state: &mut State) {
+    /*pub fn update(&self, instances: Vec<InstanceRaw>, state: &mut State) {
         state.entity_containers[self.container_index].update(instances, &state.queue);
-    }
+    }*/
 }
 
 #[repr(C)]

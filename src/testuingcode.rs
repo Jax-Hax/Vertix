@@ -34,3 +34,24 @@ click gets passed in coords and runs
 for each baloon {
     baloon.collider.check_collision(coords)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+collider{
+    bounds,
+    offset, (positoin + this)
+    layer (like unity layers)
+}

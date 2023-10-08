@@ -1,13 +1,10 @@
-use std::collections::HashMap;
-
 use wgpu::util::DeviceExt;
-use bevy_ecs::world::World;
 use winit::{
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
     event_loop::EventLoop,
     window::Window, dpi::PhysicalPosition,
 };
-
+use hecs::World;
 use crate::{
     camera::{Camera, CameraStruct},
     model::Material,
@@ -32,7 +29,7 @@ pub struct State {
     pub world: World,
     build_path: String,
     pub mouse_pos: PhysicalPosition<f64>,
-    pub entity_containers: HashMap<Prefab>
+    pub entity_containers: Vec<InstanceContainer>
 }
 
 impl State {
@@ -144,7 +141,7 @@ impl State {
                 texture_bind_group_layout,
                 mouse_pressed: false,
                 mouse_locked: mouse_lock,
-                world: World::default(),
+                world: World::new(),
                 build_path: build_path.to_string(),
                 mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },
                 entity_containers: vec![]
@@ -238,10 +235,6 @@ impl State {
         let container =
             InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32);
         self.entity_containers.push(container);
-        let index = self.entity_containers.len();
-        for instance in instances {
-            instance.container_index = index;
-        }
     }
     pub async fn compile_material(&self, texture_name: &str) -> Material {
         let diffuse_texture =
@@ -312,9 +305,5 @@ impl State {
         let container =
             InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32);
         self.entity_containers.push(container);
-        let index = self.entity_containers.len();
-        for instance in instances {
-            instance.container_index = index;
-        }
     }
 }

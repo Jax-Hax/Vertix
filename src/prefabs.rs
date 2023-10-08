@@ -1,6 +1,5 @@
-use bevy_ecs::world::World;
 use wgpu::{Buffer, Queue};
-
+use hecs::World;
 use crate::{prelude::InstanceRaw, structs::MeshType};
 
 /// 

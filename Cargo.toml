@@ -25,7 +25,7 @@ winit = "0.28"
 instant = "0.1"
 getrandom = { version = "0.2", features = ["js"] }
 glam = "0.24.1"
-bevy_ecs = "0.11.3"
+hecs = "0.10.3"
 
 [dev-dependencies]
 noise = "0.8"
