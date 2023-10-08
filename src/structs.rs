@@ -1,5 +1,6 @@
 use crate::model::{Material, Model};
 use glam::{Mat4, Quat, Vec3};
+use bevy_ecs::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 use winit::{
@@ -16,7 +17,7 @@ pub struct SingleMesh {
     pub num_elements: u32,
     pub material: Material,
 }
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Component)]
 pub struct Instance {
     pub position: Vec3,
     pub rotation: Quat,

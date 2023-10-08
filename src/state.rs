@@ -4,7 +4,7 @@ use winit::{
     event_loop::EventLoop,
     window::Window, dpi::PhysicalPosition,
 };
-use bevy_ecs::prelude::World;
+use bevy_ecs::prelude::*;
 use crate::{
     camera::{Camera, CameraStruct},
     model::Material,
@@ -15,6 +15,8 @@ use crate::{
     texture, window, prefabs::Prefab,
 };
 use slab::Slab;
+
+//#[derive(Resource)]
 pub struct State {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
@@ -29,7 +31,8 @@ pub struct State {
     pub world: World,
     build_path: String,
     pub mouse_pos: PhysicalPosition<f64>,
-    pub entity_containers: Slab<Prefab>
+    pub entity_containers: Slab<Prefab>,
+    pub scheduler: Schedule
 }
 
 impl State {
@@ -128,7 +131,7 @@ impl State {
             &config,
         );
         window.window.set_visible(true);
-
+        
         (
             Self {
                 device,
@@ -144,7 +147,8 @@ impl State {
                 world: World::new(),
                 build_path: build_path.to_string(),
                 mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },
-                entity_containers: Slab::new()
+                entity_containers: Slab::new(),
+                scheduler: Schedule::default(),
             },
             event_loop,
         )
@@ -201,6 +205,7 @@ impl State {
             0,
             bytemuck::cast_slice(&[self.camera.camera_uniform]),
         );
+        self.scheduler.run(&mut self.world);
     }
     pub async fn create_model_instances(
         &mut self,

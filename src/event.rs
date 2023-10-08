@@ -1,6 +1,6 @@
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::State, render::render, prefabs::Prefab};
+use crate::{state::State, render::render};
 
 pub fn run_event_loop(
     mut state: State,

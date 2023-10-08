@@ -7,6 +7,7 @@ pub fn check_2d_collisions(state: &mut State) {
     
 }
 
+#[derive(Component)]
 pub struct Box2D {
     x_max: f32,
     x_min: f32,
@@ -36,6 +37,7 @@ impl Box2D {
         return false;
     }
 }
+#[derive(Component)]
 pub struct Circle {
     center_x: f32,
     center_y: f32,
