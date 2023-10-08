@@ -4,7 +4,7 @@ use winit::{
     event_loop::EventLoop,
     window::Window, dpi::PhysicalPosition,
 };
-use hecs::World;
+use bevy_ecs::prelude::World;
 use crate::{
     camera::{Camera, CameraStruct},
     model::Material,
@@ -12,9 +12,9 @@ use crate::{
     resources::{self, load_texture},
     shader,
     structs::{CameraController, Instance, MeshType, SingleMesh},
-    texture, window, prefabs::{Prefab, EventHandler},
+    texture, window, prefabs::Prefab,
 };
-
+use slab::Slab;
 pub struct State {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
@@ -29,7 +29,7 @@ pub struct State {
     pub world: World,
     build_path: String,
     pub mouse_pos: PhysicalPosition<f64>,
-    pub entity_containers: Vec<Prefab>
+    pub entity_containers: Slab<Prefab>
 }
 
 impl State {
@@ -144,7 +144,7 @@ impl State {
                 world: World::new(),
                 build_path: build_path.to_string(),
                 mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },
-                entity_containers: vec![]
+                entity_containers: Slab::new()
             },
             event_loop,
         )
@@ -207,7 +207,6 @@ impl State {
         model: &str,
         instances: Vec<&mut Instance>,
         is_updating: bool,
-        event_handler: EventHandler
     ) {
         let loaded_model = resources::load_model(
             model,
@@ -234,8 +233,13 @@ impl State {
                 },
             });
         let container =
-            Prefab::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32, event_handler);
-        self.entity_containers.push(container);
+            Prefab::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32);
+        let entry = self.entity_containers.vacant_entry();
+        let key = entry.key();
+        for instance in instances {
+            instance.container_index = key;
+        }
+        entry.insert(container);
     }
     pub async fn compile_material(&self, texture_name: &str) -> Material {
         let diffuse_texture =
@@ -267,7 +271,6 @@ impl State {
         instances: Vec<&mut Instance>,
         material: Material,
         is_updating: bool,
-        event_handler: EventHandler
     ) {
         let vertex_buffer = self
             .device
@@ -305,7 +308,12 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let container =
-            Prefab::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32, event_handler);
-        self.entity_containers.push(container);
+            Prefab::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32);
+        let entry = self.entity_containers.vacant_entry();
+        let key = entry.key();
+        for instance in instances {
+            instance.container_index = key;
+        }
+        entry.insert(container);
     }
 }

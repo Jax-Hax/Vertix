@@ -56,15 +56,6 @@ pub fn run_event_loop(
                     cam_update.unwrap()(&mut state, dt);
                 }
                 state.update();
-                state.world.
-                for (_entity, (prefab,)) in state
-                    .world
-                    .query_mut::<(&mut Prefab,)>()
-                {
-                    if prefab.event_handler.update_fn.is_some(){
-                        prefab.event_handler.update_fn.unwrap()(&mut state.world);
-                    }
-                }
                 match render(&mut state) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated

@@ -2444,6 +2444,7 @@ dependencies = [
  "noise",
  "pollster",
  "reqwest",
+ "slab",
  "tobj",
  "wasm-bindgen",
  "wasm-bindgen-futures",

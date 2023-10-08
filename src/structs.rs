@@ -22,10 +22,11 @@ pub struct Instance {
     pub rotation: Quat,
     pub color: [f32; 4],
     pub is_world_space: bool,
+    pub container_index: usize,
 }
 impl Default for Instance {
     fn default() -> Self {
-        Instance { position: Vec3::ZERO, rotation: Quat::IDENTITY, color: [1.0,1.0,1.0,1.0], is_world_space: true }
+        Instance { position: Vec3::ZERO, rotation: Quat::IDENTITY, color: [1.0,1.0,1.0,1.0], is_world_space: true, container_index: 0 }
     }
 }
 

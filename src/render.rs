@@ -45,7 +45,7 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
         });
         render_pass.set_pipeline(&state.render_pipeline);
         render_pass.set_bind_group(1, &state.camera.bind_group, &[]);
-        for game_object in &state.entity_containers {
+        for (_, game_object) in &state.entity_containers {
             render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
             match &game_object.mesh_type {
                 MeshType::Model(model) => {
