@@ -3,7 +3,7 @@ use vertix::{
     camera::{default_3d_cam, Camera},
     collision::Box2D,
     prelude::*,
-    primitives::rect,
+    primitives::rect, prefabs::EventHandler,
 };
 use winit::event::WindowEvent;
 fn main() {
@@ -26,6 +26,12 @@ pub async fn run() {
     let mut instance = Instance {is_world_space: false, ..Default::default()};
     let mut instances = vec![];
     instances.push(&mut instance);
+    let event_handler = EventHandler {
+        update_fn: None,
+        collision: None,
+        on_click: Some(input),
+        to_raw: Some(to_raw),
+    };
     state.build_mesh(
         vertices,
         indices,
@@ -39,6 +45,21 @@ pub async fn run() {
 }
 
 fn input(state: &mut State, event: &WindowEvent) {
+    //keyboard inputs
+    match event {
+        WindowEvent::CursorMoved { position, .. } => {
+            let pos = state.window.normalize_position(position);
+            for (_entity, (_game_object, collider,)) in state
+                .world
+                .query_mut::<(&mut Instance, &Box2D,)>()
+            {
+                collider.check_collision(&pos);
+            }
+        }
+        _ => {}
+    }
+}
+fn to_raw(state: &mut State, event: &WindowEvent) {
     //keyboard inputs
     match event {
         WindowEvent::CursorMoved { position, .. } => {

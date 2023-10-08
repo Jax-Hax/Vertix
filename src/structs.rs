@@ -1,6 +1,4 @@
-use wgpu::{Buffer, Queue};
-
-use crate::{model::{Material, Model}, state::State};
+use crate::model::{Material, Model};
 use glam::{Mat4, Quat, Vec3};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
