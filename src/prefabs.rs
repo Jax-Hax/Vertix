@@ -2,13 +2,6 @@ use wgpu::{Buffer, Queue};
 use hecs::World;
 use crate::{prelude::InstanceRaw, structs::MeshType};
 
-/// 
-/// user will use it like:
-/// Prefab {
-///     Graphics
-/// }
-/// 
-/// 
 pub struct EventHandler{
     pub update_fn: Option<fn(&mut World)>, //called once per frame
     pub collision: Option<fn(&mut World)>, //called when a collision on this is detected

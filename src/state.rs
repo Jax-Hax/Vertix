@@ -11,8 +11,8 @@ use crate::{
     prelude::Vertex,
     resources::{self, load_texture},
     shader,
-    structs::{CameraController, Instance, InstanceContainer, MeshType, SingleMesh},
-    texture, window, prefabs::Prefab,
+    structs::{CameraController, Instance, MeshType, SingleMesh},
+    texture, window, prefabs::{Prefab, EventHandler},
 };
 
 pub struct State {
@@ -29,7 +29,7 @@ pub struct State {
     pub world: World,
     build_path: String,
     pub mouse_pos: PhysicalPosition<f64>,
-    pub entity_containers: Vec<InstanceContainer>
+    pub entity_containers: Vec<Prefab>
 }
 
 impl State {
@@ -207,6 +207,7 @@ impl State {
         model: &str,
         instances: Vec<&mut Instance>,
         is_updating: bool,
+        event_handler: EventHandler
     ) {
         let loaded_model = resources::load_model(
             model,
@@ -233,7 +234,7 @@ impl State {
                 },
             });
         let container =
-            InstanceContainer::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32);
+            Prefab::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32, event_handler);
         self.entity_containers.push(container);
     }
     pub async fn compile_material(&self, texture_name: &str) -> Material {
@@ -266,6 +267,7 @@ impl State {
         instances: Vec<&mut Instance>,
         material: Material,
         is_updating: bool,
+        event_handler: EventHandler
     ) {
         let vertex_buffer = self
             .device
@@ -303,7 +305,7 @@ impl State {
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let container =
-            InstanceContainer::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32);
+            Prefab::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32, event_handler);
         self.entity_containers.push(container);
     }
 }
