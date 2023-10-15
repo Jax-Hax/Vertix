@@ -1,3 +1,4 @@
+use bevy_ecs::system::Query;
 use glam::{Quat, Vec3};
 use vertix::{
     camera::{default_3d_cam, Camera},
@@ -63,4 +64,14 @@ fn update(state: &mut State) {
         temp_instance = instance;
     }
     temp_instance.update(instances, state);
+}
+fn movement(mut query: Query<(&mut Instance,)>) {
+    let mut instances = vec![];
+    let mut temp_instance;
+    for (mut instance,) in &mut query {
+        instance.position[0] += 0.001;
+        instances.push(instance.to_raw());
+        temp_instance = instance;
+    }
+    temp_instance.
 }
