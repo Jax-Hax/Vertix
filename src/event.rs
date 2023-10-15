@@ -1,6 +1,6 @@
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::State, render::render};
+use crate::{state::{State, MousePos}, render::render};
 
 pub fn run_event_loop(
     mut state: State,
@@ -37,7 +37,8 @@ pub fn run_event_loop(
                         ..
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::CursorMoved { position, .. } => {
-                        state.mouse_pos = position.clone();
+                        let mut mouse_pos = state.world.get_resource_mut::<MousePos>().unwrap();
+                        mouse_pos.pos = state.window.normalize_position(position);
                     }
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);

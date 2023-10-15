@@ -15,7 +15,10 @@ use crate::{
     texture, window, prefabs::Prefab,
 };
 use slab::Slab;
-
+#[derive(Resource)]
+pub struct MousePos {
+    pub pos: PhysicalPosition<f32>,
+}
 //#[derive(Resource)]
 pub struct State {
     pub device: wgpu::Device,
@@ -30,7 +33,6 @@ pub struct State {
     pub mouse_locked: bool,
     pub world: World,
     build_path: String,
-    pub mouse_pos: PhysicalPosition<f64>,
     pub entity_containers: Slab<Prefab>,
     pub scheduler: Schedule
 }
@@ -131,7 +133,8 @@ impl State {
             &config,
         );
         window.window.set_visible(true);
-        
+        let mut world = World::new();
+        world.insert_resource(MousePos {pos: PhysicalPosition { x: 0.0, y: 0.0 }});
         (
             Self {
                 device,
@@ -144,9 +147,8 @@ impl State {
                 texture_bind_group_layout,
                 mouse_pressed: false,
                 mouse_locked: mouse_lock,
-                world: World::new(),
+                world,
                 build_path: build_path.to_string(),
-                mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },
                 entity_containers: Slab::new(),
                 scheduler: Schedule::default(),
             },

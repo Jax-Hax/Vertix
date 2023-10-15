@@ -3,7 +3,7 @@ use vertix::{
     camera::{default_3d_cam, Camera},
     collision::Box2D,
     prelude::*,
-    primitives::rect,
+    primitives::rect, state::MousePos,
 };
 use bevy_ecs::prelude::*;
 fn main() {
@@ -38,8 +38,8 @@ pub async fn run() {
     //render loop
     run_event_loop(state, event_loop, Some(default_3d_cam));
 }
-fn movement(mut query: Query<(&mut Instance, &Box2D)>) {
+fn movement(mut query: Query<(&mut Instance, &Box2D)>, mouse_pos: Res<MousePos>) {
     for (mut instance, collider) in &mut query {
-        
+        collider.check_collision(&mouse_pos.pos);
     }
 }
