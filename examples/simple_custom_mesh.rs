@@ -10,7 +10,7 @@ pub async fn run() {
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //custom mesh
     let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
-    let mut instance = Instance {is_world_space: false, ..Default::default()};
+    let mut instance = Instance {is_world_space: true, ..Default::default()};
     let mut instances = vec![];
     instances.push(&mut instance);
     state.build_mesh(
