@@ -1,3 +1,4 @@
+use slab::Slab;
 use wgpu::util::DeviceExt;
 use winit::{
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
@@ -31,6 +32,7 @@ pub struct State {
     pub mouse_pressed: bool,
     pub mouse_locked: bool,
     build_path: String,
+    pub prefab_slab: Slab<Prefab>
 }
 
 impl State {
@@ -129,8 +131,6 @@ impl State {
             &config,
         );
         window.window.set_visible(true);
-        let mut world = World::new();
-        world.insert_resource(MousePos {pos: PhysicalPosition { x: 0.0, y: 0.0 }});
         (
             Self {
                 device,
@@ -143,9 +143,8 @@ impl State {
                 texture_bind_group_layout,
                 mouse_pressed: false,
                 mouse_locked: mouse_lock,
-                world,
                 build_path: build_path.to_string(),
-                scheduler: Schedule::default(),
+                prefab_slab: Slab::new(),
             },
             event_loop,
         )
@@ -202,7 +201,7 @@ impl State {
             0,
             bytemuck::cast_slice(&[self.camera.camera_uniform]),
         );
-        self.scheduler.run(&mut self.world);
+        
     }
     pub async fn create_model_instances(
         &mut self,
@@ -236,10 +235,10 @@ impl State {
             });
         let container =
             Prefab::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32);
-        let entry = self.entity_containers.vacant_entry();
+        let entry = self.prefab_slab.vacant_entry();
         let key = entry.key();
         for instance in instances {
-            instance.container_index = key;
+            instance.prefab_index = key;
         }
         entry.insert(container);
     }
@@ -311,10 +310,10 @@ impl State {
             });
         let container =
             Prefab::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32);
-        let entry = self.entity_containers.vacant_entry();
+        let entry = self.prefab_slab.vacant_entry();
         let key = entry.key();
         for instance in instances {
-            instance.container_index = key;
+            instance.prefab_index = key;
         }
         entry.insert(container);
     }

@@ -1,5 +1,5 @@
 use bevy_ecs::{world::World, schedule::Schedule};
-use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
+use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}, dpi::PhysicalPosition};
 
 use crate::{state::{State, MousePos}, render::render};
 
@@ -9,6 +9,7 @@ pub fn run_event_loop(
     cam_update: Option<fn (&mut State, dt: std::time::Duration)>,
 ) {
     let mut world = World::new();
+    world.insert_resource(MousePos {pos: PhysicalPosition { x: 0.0, y: 0.0 }});
     let schedule = Schedule::default();
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
@@ -60,6 +61,7 @@ pub fn run_event_loop(
                     cam_update.unwrap()(&mut state, dt);
                 }
                 state.update();
+                schedule.run(&mut world);
                 match render(&mut state) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
