@@ -47,8 +47,6 @@ pub async fn run() {
     run_event_loop(
         state,
         event_loop,
-        Some(update),
-        None,
         Some(default_3d_cam),
     );
 }

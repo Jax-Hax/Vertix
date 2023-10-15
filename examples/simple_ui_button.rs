@@ -38,8 +38,8 @@ pub async fn run() {
     //render loop
     run_event_loop(state, event_loop, Some(default_3d_cam));
 }
-fn movement(mut query: Query<(&mut Instance, &Box2D)>, mouse_pos: Res<MousePos>) {
-    for (mut instance, collider) in &mut query {
+fn movement(query: Query<(&Instance, &Box2D)>, mouse_pos: Res<MousePos>) {
+    for (_instance, collider) in &query {
         collider.check_collision(&mouse_pos.pos);
     }
 }

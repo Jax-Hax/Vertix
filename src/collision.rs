@@ -1,11 +1,7 @@
 use glam::Vec2;
 use winit::dpi::PhysicalPosition;
 
-use crate::state::State;
 use bevy_ecs::prelude::*;
-pub fn check_2d_collisions(state: &mut State) {
-    
-}
 
 #[derive(Component)]
 pub struct Box2D {

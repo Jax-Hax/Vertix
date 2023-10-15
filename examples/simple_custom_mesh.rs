@@ -22,5 +22,5 @@ pub async fn run() {
     );
     state.world.spawn((instance,));
     //render loop
-    run_event_loop(state, event_loop, None, None, Some(default_3d_cam));
+    run_event_loop(state, event_loop, Some(default_3d_cam));
 }
