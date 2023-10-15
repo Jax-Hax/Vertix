@@ -1,6 +1,6 @@
-use crate::{model::{Material, Model}, prefabs::Prefab};
+use crate::{model::{Material, Model}, prefabs::Prefab, state::State};
+use bevy_ecs::component::Component;
 use glam::{Mat4, Quat, Vec3};
-use bevy_ecs::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 use winit::{
@@ -35,9 +35,8 @@ impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw::new(self.position, self.rotation, self.color, self.is_world_space)
     }
-    pub fn update(&self, instances: Vec<InstanceRaw>, world: &mut World) {
-        world.entity_mut(self.container_entity).get_mut::<Prefab>().unwrap().update_buffer(instances, queue);
-        state.entity_containers[self.container_index].update(instances, &state.queue);
+    pub fn update(&self, instances: Vec<InstanceRaw>, state: &mut State) {
+        state.prefab_slab.get_mut(self.prefab_index).unwrap().update_buffer(instances, &state.queue);
     }
 }
 

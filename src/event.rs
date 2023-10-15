@@ -10,11 +10,13 @@ pub fn run_event_loop(
 ) {
     let mut world = World::new();
     world.insert_resource(MousePos {pos: PhysicalPosition { x: 0.0, y: 0.0 }});
-    let schedule = Schedule::default();
+    world.insert_resource(state);
+    let mut schedule = Schedule::default();
     let mut last_render_time = instant::Instant::now();
+    
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
-        
+        let mut state = world.get_resource_mut::<State>().unwrap();
         match event {
             Event::MainEventsCleared => state.window().request_redraw(),
             Event::DeviceEvent {
