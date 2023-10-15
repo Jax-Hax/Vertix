@@ -14,12 +14,11 @@ use crate::{
     structs::{CameraController, Instance, MeshType, SingleMesh},
     texture, window, prefabs::Prefab,
 };
-use slab::Slab;
 #[derive(Resource)]
 pub struct MousePos {
     pub pos: PhysicalPosition<f32>,
 }
-//#[derive(Resource)]
+#[derive(Resource)]
 pub struct State {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
@@ -31,10 +30,7 @@ pub struct State {
     pub texture_bind_group_layout: wgpu::BindGroupLayout,
     pub mouse_pressed: bool,
     pub mouse_locked: bool,
-    pub world: World,
     build_path: String,
-    pub entity_containers: Slab<Prefab>,
-    pub scheduler: Schedule
 }
 
 impl State {
@@ -149,7 +145,6 @@ impl State {
                 mouse_locked: mouse_lock,
                 world,
                 build_path: build_path.to_string(),
-                entity_containers: Slab::new(),
                 scheduler: Schedule::default(),
             },
             event_loop,

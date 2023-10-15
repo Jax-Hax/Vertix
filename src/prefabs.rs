@@ -1,5 +1,7 @@
+use bevy_ecs::component::Component;
 use wgpu::{Buffer, Queue};
 use crate::{prelude::InstanceRaw, structs::MeshType};
+#[derive(Component)]
 pub struct Prefab {
     pub length: u32,
     pub buffer: Buffer,

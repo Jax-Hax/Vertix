@@ -1,4 +1,4 @@
-use crate::model::{Material, Model};
+use crate::{model::{Material, Model}, prefabs::Prefab};
 use glam::{Mat4, Quat, Vec3};
 use bevy_ecs::prelude::*;
 #[cfg(target_arch = "wasm32")]
@@ -27,7 +27,7 @@ pub struct Instance {
 }
 impl Default for Instance {
     fn default() -> Self {
-        Instance { position: Vec3::ZERO, rotation: Quat::IDENTITY, color: [1.0,1.0,1.0,1.0], is_world_space: true, container_index: Entity:: }
+        Instance { position: Vec3::ZERO, rotation: Quat::IDENTITY, color: [1.0,1.0,1.0,1.0], is_world_space: true, container_entity: Entity::PLACEHOLDER }
     }
 }
 
@@ -35,7 +35,8 @@ impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw::new(self.position, self.rotation, self.color, self.is_world_space)
     }
-    pub fn update(&self, instances: Vec<InstanceRaw>, state: &mut State) {
+    pub fn update(&self, instances: Vec<InstanceRaw>, world: &mut World) {
+        world.entity_mut(self.container_entity).get_mut::<Prefab>().unwrap().update_buffer(instances, queue);
         state.entity_containers[self.container_index].update(instances, &state.queue);
     }
 }

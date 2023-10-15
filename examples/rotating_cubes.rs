@@ -65,7 +65,7 @@ fn update(state: &mut State) {
     }
     temp_instance.update(instances, state);
 }
-fn movement(mut query: Query<(&mut Instance,)>) {
+fn movement(mut query: Query<(&mut Instance,)>, world: &mut World) {
     let mut instances = vec![];
     let mut temp_instance;
     for (mut instance,) in &mut query {
@@ -73,5 +73,5 @@ fn movement(mut query: Query<(&mut Instance,)>) {
         instances.push(instance.to_raw());
         temp_instance = instance;
     }
-    temp_instance.
+    temp_instance.update(instances, world)
 }

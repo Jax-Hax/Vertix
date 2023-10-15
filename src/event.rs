@@ -1,3 +1,4 @@
+use bevy_ecs::{world::World, schedule::Schedule};
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
 use crate::{state::{State, MousePos}, render::render};
@@ -7,6 +8,8 @@ pub fn run_event_loop(
     event_loop: EventLoop<()>,
     cam_update: Option<fn (&mut State, dt: std::time::Duration)>,
 ) {
+    let mut world = World::new();
+    let schedule = Schedule::default();
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
@@ -37,7 +40,7 @@ pub fn run_event_loop(
                         ..
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::CursorMoved { position, .. } => {
-                        let mut mouse_pos = state.world.get_resource_mut::<MousePos>().unwrap();
+                        let mut mouse_pos = world.get_resource_mut::<MousePos>().unwrap();
                         mouse_pos.pos = state.window.normalize_position(position);
                     }
                     WindowEvent::Resized(physical_size) => {
