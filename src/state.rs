@@ -20,9 +20,12 @@ pub struct MousePos {
     pub pos: PhysicalPosition<f32>,
 }
 #[derive(Resource)]
+pub struct UpdateInstance {
+    pub queue: wgpu::Queue,
+    pub prefab_slab: Slab<Prefab>,
+}
 pub struct State {
     pub device: wgpu::Device,
-    pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub render_pipeline: wgpu::RenderPipeline,
     pub camera: CameraStruct,
@@ -32,7 +35,8 @@ pub struct State {
     pub mouse_pressed: bool,
     pub mouse_locked: bool,
     build_path: String,
-    pub prefab_slab: Slab<Prefab>
+    pub world: World,
+    pub schedule: Schedule
 }
 
 impl State {
@@ -131,10 +135,13 @@ impl State {
             &config,
         );
         window.window.set_visible(true);
+        let mut world = World::new();
+        world.insert_resource(MousePos {pos: PhysicalPosition { x: 0.0, y: 0.0 }});
+        world.insert_resource(UpdateInstance {queue,prefab_slab: Slab::new(),});
+        let schedule = Schedule::default();
         (
             Self {
                 device,
-                queue,
                 config,
                 render_pipeline,
                 camera,
@@ -144,7 +151,8 @@ impl State {
                 mouse_pressed: false,
                 mouse_locked: mouse_lock,
                 build_path: build_path.to_string(),
-                prefab_slab: Slab::new(),
+                world,
+                schedule,
             },
             event_loop,
         )
@@ -196,7 +204,8 @@ impl State {
         self.camera
             .camera_uniform
             .update_view_proj(&self.camera.camera_transform, &self.camera.projection);
-        self.queue.write_buffer(
+        let mut queue = self.world.get_resource_mut::<UpdateInstance>().unwrap();
+        queue.queue.write_buffer(
             &self.camera.buffer,
             0,
             bytemuck::cast_slice(&[self.camera.camera_uniform]),
@@ -209,11 +218,12 @@ impl State {
         instances: Vec<&mut Instance>,
         is_updating: bool,
     ) {
+        let mut instance_updater = self.world.get_resource_mut::<UpdateInstance>().unwrap();
         let loaded_model = resources::load_model(
             model,
             &self.build_path,
             &self.device,
-            &self.queue,
+            &instance_updater.queue,
             &self.texture_bind_group_layout,
         )
         .await
@@ -235,7 +245,7 @@ impl State {
             });
         let container =
             Prefab::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32);
-        let entry = self.prefab_slab.vacant_entry();
+        let entry = instance_updater.prefab_slab.vacant_entry();
         let key = entry.key();
         for instance in instances {
             instance.prefab_index = key;
@@ -243,8 +253,9 @@ impl State {
         entry.insert(container);
     }
     pub async fn compile_material(&self, texture_name: &str) -> Material {
+        let queue = self.world.get_resource::<UpdateInstance>().unwrap();
         let diffuse_texture =
-            load_texture(texture_name, &self.build_path, &self.device, &self.queue)
+            load_texture(texture_name, &self.build_path, &self.device, &queue.queue)
                 .await
                 .unwrap();
         let texture_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -310,7 +321,8 @@ impl State {
             });
         let container =
             Prefab::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32);
-        let entry = self.prefab_slab.vacant_entry();
+        let update_instance = self.world.get_resource::<UpdateInstance>().unwrap();
+        let entry = update_instance.prefab_slab.vacant_entry();
         let key = entry.key();
         for instance in instances {
             instance.prefab_index = key;

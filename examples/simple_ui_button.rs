@@ -34,7 +34,7 @@ pub async fn run() {
         false,
     );
     state.world.spawn((instance, collider));
-    state.scheduler.add_systems(movement);
+    state.schedule.add_systems(movement);
     //render loop
     run_event_loop(state, event_loop, Some(default_3d_cam));
 }
