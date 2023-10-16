@@ -2,12 +2,13 @@ use std::iter;
 
 use crate::{
     model::DrawModel,
-    state::State,
+    state::{State, UpdateInstance},
     structs::MeshType,
 };
 
 pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
     let output = state.window.surface.get_current_texture()?;
+    let instance_updater = state.world.get_resource::<UpdateInstance>().unwrap();
     let view = output
         .texture
         .create_view(&wgpu::TextureViewDescriptor::default());
@@ -45,7 +46,7 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
         });
         render_pass.set_pipeline(&state.render_pipeline);
         render_pass.set_bind_group(1, &state.camera.bind_group, &[]);
-        for (_, game_object) in &state.prefab_slab {
+        for (_, game_object) in &instance_updater.prefab_slab {
             render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
             match &game_object.mesh_type {
                 MeshType::Model(model) => {
@@ -62,7 +63,7 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
         }
     }
 
-    state.queue.submit(iter::once(encoder.finish()));
+    instance_updater.queue.submit(iter::once(encoder.finish()));
     output.present();
 
     Ok(())

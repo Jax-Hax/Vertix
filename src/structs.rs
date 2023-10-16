@@ -1,10 +1,8 @@
-use crate::{model::{Material, Model}, prefabs::Prefab};
+use crate::{model::{Material, Model}, state::UpdateInstance};
 use bevy_ecs::component::Component;
 use glam::{Mat4, Quat, Vec3};
-use slab::Slab;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-use wgpu::Queue;
 use winit::{
     dpi::PhysicalPosition,
     event::{ElementState, MouseScrollDelta, VirtualKeyCode},
@@ -37,8 +35,8 @@ impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw::new(self.position, self.rotation, self.color, self.is_world_space)
     }
-    pub fn update(&self, instances: Vec<InstanceRaw>, queue: &Queue, mut prefab_list: Slab<Prefab>) {
-        prefab_list.get_mut(self.prefab_index).unwrap().update_buffer(instances, queue);
+    pub fn update(&self, instances: Vec<InstanceRaw>, instance_update: &mut UpdateInstance) {
+        instance_update.prefab_slab.get_mut(self.prefab_index).unwrap().update_buffer(instances, &instance_update.queue);
     }
 }
 

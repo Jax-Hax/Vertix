@@ -204,7 +204,7 @@ impl State {
         self.camera
             .camera_uniform
             .update_view_proj(&self.camera.camera_transform, &self.camera.projection);
-        let mut queue = self.world.get_resource_mut::<UpdateInstance>().unwrap();
+        let queue = self.world.get_resource_mut::<UpdateInstance>().unwrap();
         queue.queue.write_buffer(
             &self.camera.buffer,
             0,
@@ -321,7 +321,7 @@ impl State {
             });
         let container =
             Prefab::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32);
-        let update_instance = self.world.get_resource::<UpdateInstance>().unwrap();
+        let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
         let entry = update_instance.prefab_slab.vacant_entry();
         let key = entry.key();
         for instance in instances {
