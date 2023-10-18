@@ -1,8 +1,8 @@
-use bevy_ecs::{system::{Query, ResMut}};
+use bevy_ecs::system::{Query, ResMut, Res};
 use glam::{Quat, Vec3};
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*, state::UpdateInstance,
+    prelude::*, state::{UpdateInstance, DeltaTime},
 };
 
 fn main() {
@@ -47,11 +47,11 @@ pub async fn run() {
         Some(default_3d_cam),
     );
 }
-fn movement(mut query: Query<(&mut Instance,)>, mut instance_update: ResMut<UpdateInstance>) {
+fn movement(mut query: Query<(&mut Instance,)>, mut instance_update: ResMut<UpdateInstance>, delta_time: Res<DeltaTime>) {
     let mut instances = vec![];
     let mut temp_instance = Instance {..Default::default()};
     for (mut instance,) in &mut query {
-        instance.position[0] += 0.001;
+        instance.position[0] += 10. * (delta_time.dt.as_millis() as f32 * 0.001);
         instances.push(instance.to_raw());
         temp_instance = *instance;
     }

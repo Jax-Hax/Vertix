@@ -1,3 +1,4 @@
+use instant::Duration;
 use slab::Slab;
 use wgpu::util::DeviceExt;
 use winit::{
@@ -23,6 +24,10 @@ pub struct MousePos {
 pub struct UpdateInstance {
     pub queue: wgpu::Queue,
     pub prefab_slab: Slab<Prefab>,
+}
+#[derive(Resource)]
+pub struct DeltaTime {
+    pub dt: Duration,
 }
 pub struct State {
     pub device: wgpu::Device,
@@ -138,6 +143,7 @@ impl State {
         let mut world = World::new();
         world.insert_resource(MousePos {pos: PhysicalPosition { x: 0.0, y: 0.0 }});
         world.insert_resource(UpdateInstance {queue,prefab_slab: Slab::new(),});
+        world.insert_resource(DeltaTime {dt: Duration::ZERO});
         let schedule = Schedule::default();
         (
             Self {

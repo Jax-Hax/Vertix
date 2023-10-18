@@ -1,6 +1,6 @@
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::{State, MousePos}, render::render};
+use crate::{state::{State, MousePos, DeltaTime}, render::render};
 
 pub fn run_event_loop(
     mut state: State,
@@ -53,6 +53,8 @@ pub fn run_event_loop(
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
+                let mut delta_time = state.world.get_resource_mut::<DeltaTime>().unwrap();
+                delta_time.dt = dt;
                 if cam_update.is_some() {
                     cam_update.unwrap()(&mut state, dt);
                 }
