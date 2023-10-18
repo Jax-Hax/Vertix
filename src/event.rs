@@ -1,3 +1,4 @@
+use instant::Duration;
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
 use crate::{state::{State, MousePos, DeltaTime}, render::render};
@@ -73,4 +74,7 @@ pub fn run_event_loop(
             _ => {}
         }
     });
+}
+pub fn delta_time_to_seconds(dt: Duration) -> f32 {
+    dt.as_millis() as f32 * 0.001
 }

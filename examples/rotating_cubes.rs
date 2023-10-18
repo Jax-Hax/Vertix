@@ -51,7 +51,7 @@ fn movement(mut query: Query<(&mut Instance,)>, mut instance_update: ResMut<Upda
     let mut instances = vec![];
     let mut temp_instance = Instance {..Default::default()};
     for (mut instance,) in &mut query {
-        instance.position[0] += 10. * (delta_time.dt.as_millis() as f32 * 0.001);
+        instance.position[0] += 10. * delta_time_to_seconds(delta_time.dt);
         instances.push(instance.to_raw());
         temp_instance = *instance;
     }

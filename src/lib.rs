@@ -14,7 +14,7 @@ mod render;
 pub mod prelude {
     pub use crate::{
         structs::{Instance,InstanceRaw},
-        event::run_event_loop,
+        event::{run_event_loop,delta_time_to_seconds},
         state::State,
         structs::Vertex,
         camera::Camera
