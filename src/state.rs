@@ -1,20 +1,22 @@
-use instant::Duration;
-use slab::Slab;
-use wgpu::util::DeviceExt;
-use winit::{
-    event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
-    event_loop::EventLoop,
-    window::Window, dpi::PhysicalPosition,
-};
-use bevy_ecs::prelude::*;
 use crate::{
     camera::{Camera, CameraStruct},
     model::Material,
+    prefabs::Prefab,
     prelude::Vertex,
     resources::{self, load_texture},
     shader,
     structs::{CameraController, Instance, MeshType, SingleMesh},
-    texture, window, prefabs::Prefab,
+    texture, window,
+};
+use bevy_ecs::prelude::*;
+use instant::Duration;
+use slab::Slab;
+use wgpu::util::DeviceExt;
+use winit::{
+    dpi::PhysicalPosition,
+    event::{ElementState, KeyboardInput, MouseButton, WindowEvent, VirtualKeyCode},
+    event_loop::EventLoop,
+    window::Window,
 };
 #[derive(Resource)]
 pub struct MousePos {
@@ -24,6 +26,10 @@ pub struct MousePos {
 pub struct UpdateInstance {
     pub queue: wgpu::Queue,
     pub prefab_slab: Slab<Prefab>,
+}
+#[derive(Resource)]
+pub struct WindowEvents {
+    pub keys_pressed: Vec<(VirtualKeyCode, ElementState)>,
 }
 #[derive(Resource)]
 pub struct DeltaTime {
@@ -41,7 +47,7 @@ pub struct State {
     pub mouse_locked: bool,
     build_path: String,
     pub world: World,
-    pub schedule: Schedule
+    pub schedule: Schedule,
 }
 
 impl State {
@@ -126,10 +132,7 @@ impl State {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[
-                    &texture_bind_group_layout,
-                    &camera.bind_group_layout,
-                ],
+                bind_group_layouts: &[&texture_bind_group_layout, &camera.bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -141,9 +144,15 @@ impl State {
         );
         window.window.set_visible(true);
         let mut world = World::new();
-        world.insert_resource(MousePos {pos: PhysicalPosition { x: 0.0, y: 0.0 }});
-        world.insert_resource(UpdateInstance {queue,prefab_slab: Slab::new(),});
-        world.insert_resource(DeltaTime {dt: Duration::ZERO});
+        world.insert_resource(MousePos {
+            pos: PhysicalPosition { x: 0.0, y: 0.0 },
+        });
+        world.insert_resource(UpdateInstance {
+            queue,
+            prefab_slab: Slab::new(),
+        });
+        world.insert_resource(DeltaTime { dt: Duration::ZERO });
+        world.insert_resource(WindowEvents { keys_pressed: vec![] });
         let schedule = Schedule::default();
         (
             Self {
@@ -190,7 +199,15 @@ impl State {
                         ..
                     },
                 ..
-            } => self.camera.camera_controller.process_keyboard(*key, *state),
+            } => {
+                let key_pressed = (*key, *state);
+                self.world
+                    .get_resource_mut::<WindowEvents>()
+                    .unwrap()
+                    .keys_pressed
+                    .push(key_pressed);
+                self.camera.camera_controller.process_keyboard(*key, *state)
+            }
             WindowEvent::MouseWheel { delta, .. } => {
                 self.camera.camera_controller.process_scroll(delta);
                 true
@@ -216,7 +233,6 @@ impl State {
             0,
             bytemuck::cast_slice(&[self.camera.camera_uniform]),
         );
-        
     }
     pub async fn create_model_instances(
         &mut self,
@@ -249,8 +265,11 @@ impl State {
                     wgpu::BufferUsages::VERTEX
                 },
             });
-        let container =
-            Prefab::new(instance_buffer, MeshType::Model(loaded_model), instances.len() as u32);
+        let container = Prefab::new(
+            instance_buffer,
+            MeshType::Model(loaded_model),
+            instances.len() as u32,
+        );
         let entry = instance_updater.prefab_slab.vacant_entry();
         let key = entry.key();
         for instance in instances {
@@ -325,8 +344,11 @@ impl State {
                 contents: bytemuck::cast_slice(&instance_data),
                 usage: wgpu::BufferUsages::VERTEX,
             });
-        let container =
-            Prefab::new(instance_buffer, MeshType::SingleMesh(mesh), instances.len() as u32);
+        let container = Prefab::new(
+            instance_buffer,
+            MeshType::SingleMesh(mesh),
+            instances.len() as u32,
+        );
         let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
         let entry = update_instance.prefab_slab.vacant_entry();
         let key = entry.key();

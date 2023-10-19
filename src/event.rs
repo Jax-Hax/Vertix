@@ -1,7 +1,7 @@
 use instant::Duration;
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::{State, MousePos, DeltaTime}, render::render};
+use crate::{state::{State, MousePos, DeltaTime, WindowEvents}, render::render};
 
 pub fn run_event_loop(
     mut state: State,
@@ -25,6 +25,7 @@ pub fn run_event_loop(
                 window_id,
             } if window_id == state.window().id() => {
                 state.input(event);
+                println!("{:#?}", event);
                 match event {
                     #[cfg(not(target_arch="wasm32"))]
                     WindowEvent::CloseRequested
@@ -61,6 +62,7 @@ pub fn run_event_loop(
                 }
                 state.update();
                 state.schedule.run(&mut state.world);
+                state.world.get_resource_mut::<WindowEvents>().unwrap().keys_pressed = vec![];
                 match render(&mut state) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
