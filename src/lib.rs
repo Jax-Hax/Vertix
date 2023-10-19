@@ -1,7 +1,7 @@
 pub mod camera;
 pub mod structs;
 pub mod model;
-pub mod resources;
+pub mod loader;
 pub mod shader;
 pub mod state;
 pub mod texture;

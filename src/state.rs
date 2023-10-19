@@ -3,7 +3,7 @@ use crate::{
     model::Material,
     prefabs::Prefab,
     prelude::Vertex,
-    resources::{self, load_texture},
+    loader::{self, load_texture},
     shader,
     structs::{CameraController, Instance, MeshType, SingleMesh},
     texture, window,
@@ -241,7 +241,7 @@ impl State {
         is_updating: bool,
     ) {
         let mut instance_updater = self.world.get_resource_mut::<UpdateInstance>().unwrap();
-        let loaded_model = resources::load_model(
+        let loaded_model = loader::load_model(
             model,
             &self.build_path,
             &self.device,
