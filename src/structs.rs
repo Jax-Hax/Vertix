@@ -1,4 +1,4 @@
-use crate::{model::{Material, Model}, state::UpdateInstance};
+use crate::{model::{Material, Model}, resources::UpdateInstance};
 use bevy_ecs::component::Component;
 use glam::{Mat4, Quat, Vec3};
 #[cfg(target_arch = "wasm32")]

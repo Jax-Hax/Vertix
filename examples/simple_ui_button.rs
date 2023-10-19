@@ -3,7 +3,7 @@ use vertix::{
     camera::{default_3d_cam, Camera},
     collision::Box2D,
     prelude::*,
-    primitives::rect, state::MousePos,
+    primitives::rect,
 };
 use bevy_ecs::prelude::*;
 fn main() {

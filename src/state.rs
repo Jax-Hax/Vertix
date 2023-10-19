@@ -6,7 +6,7 @@ use crate::{
     loader::{self, load_texture},
     shader,
     structs::{CameraController, Instance, MeshType, SingleMesh},
-    texture, window,
+    texture, window, resources::{UpdateInstance, MousePos, DeltaTime, WindowEvents},
 };
 use bevy_ecs::prelude::*;
 use instant::Duration;
@@ -14,27 +14,10 @@ use slab::Slab;
 use wgpu::util::DeviceExt;
 use winit::{
     dpi::PhysicalPosition,
-    event::{ElementState, KeyboardInput, MouseButton, WindowEvent, VirtualKeyCode},
+    event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
     event_loop::EventLoop,
     window::Window,
 };
-#[derive(Resource)]
-pub struct MousePos {
-    pub pos: PhysicalPosition<f32>,
-}
-#[derive(Resource)]
-pub struct UpdateInstance {
-    pub queue: wgpu::Queue,
-    pub prefab_slab: Slab<Prefab>,
-}
-#[derive(Resource)]
-pub struct WindowEvents {
-    pub keys_pressed: Vec<(VirtualKeyCode, ElementState)>,
-}
-#[derive(Resource)]
-pub struct DeltaTime {
-    pub dt: Duration,
-}
 pub struct State {
     pub device: wgpu::Device,
     pub config: wgpu::SurfaceConfiguration,

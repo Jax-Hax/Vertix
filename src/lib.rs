@@ -10,6 +10,7 @@ pub mod prefabs;
 pub mod primitives;
 pub mod collision;
 pub mod event;
+pub mod resources;
 mod render;
 pub mod prelude {
     pub use crate::{
@@ -17,7 +18,8 @@ pub mod prelude {
         event::{run_event_loop,delta_time_to_seconds},
         state::State,
         structs::Vertex,
-        camera::Camera
+        camera::Camera,
+        resources::*
     };
     #[cfg(target_arch = "wasm32")]
     pub use wasm_bindgen::prelude::*;

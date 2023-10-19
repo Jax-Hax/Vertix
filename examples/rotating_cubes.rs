@@ -2,7 +2,7 @@ use bevy_ecs::system::{Query, ResMut, Res};
 use glam::{Quat, Vec3};
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*, state::{UpdateInstance, DeltaTime},
+    prelude::*,
 };
 
 fn main() {

@@ -1,7 +1,7 @@
 use instant::Duration;
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::{State, MousePos, DeltaTime, WindowEvents}, render::render};
+use crate::{state::State, render::render, resources::{WindowEvents, MousePos, DeltaTime}};
 
 pub fn run_event_loop(
     mut state: State,

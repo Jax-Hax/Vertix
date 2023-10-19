@@ -2,8 +2,8 @@ use std::iter;
 
 use crate::{
     model::DrawModel,
-    state::{State, UpdateInstance},
-    structs::MeshType,
+    state::State,
+    structs::MeshType, resources::UpdateInstance,
 };
 
 pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
