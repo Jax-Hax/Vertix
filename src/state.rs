@@ -2,10 +2,10 @@ use crate::{
     camera::{Camera, CameraStruct},
     model::Material,
     prefabs::Prefab,
-    prelude::Vertex,
+    prelude::{Vertex, Instance},
     loader::{self, load_texture},
     shader,
-    structs::{CameraController, Instance, MeshType, SingleMesh},
+    structs::{CameraController, MeshType, SingleMesh},
     texture, window, resources::{UpdateInstance, MousePos, DeltaTime, WindowEvents},
 };
 use bevy_ecs::prelude::*;

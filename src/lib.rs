@@ -11,10 +11,11 @@ pub mod primitives;
 pub mod collision;
 pub mod event;
 pub mod resources;
+pub mod instance;
 mod render;
 pub mod prelude {
     pub use crate::{
-        structs::{Instance,InstanceRaw},
+        instance::{Instance,InstanceRaw},
         event::{run_event_loop,delta_time_to_seconds},
         state::State,
         structs::Vertex,
