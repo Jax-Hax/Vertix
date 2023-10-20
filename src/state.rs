@@ -6,9 +6,10 @@ use crate::{
     loader::{self, load_texture},
     shader,
     structs::{CameraController, MeshType, SingleMesh},
-    texture, window, resources::{UpdateInstance, MousePos, DeltaTime, WindowEvents},
+    texture, window, resources::{UpdateInstance, MousePos, DeltaTime, WindowEvents}, primitives::rect,
 };
 use bevy_ecs::prelude::*;
+use glam::Vec2;
 use instant::Duration;
 use slab::Slab;
 use wgpu::util::DeviceExt;
@@ -292,6 +293,61 @@ impl State {
         material: Material,
         is_updating: bool,
     ) {
+        let vertex_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(&vertices),
+                usage: if is_updating {
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                } else {
+                    wgpu::BufferUsages::VERTEX
+                },
+            });
+        let index_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(&indices),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+        let mesh = SingleMesh {
+            vertex_buffer,
+            index_buffer,
+            num_elements: indices.len() as u32,
+            material,
+        };
+        let mut instance_data = vec![];
+        for instance in &instances {
+            instance_data.push(instance.to_raw());
+        }
+        let instance_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Instance Buffer"),
+                contents: bytemuck::cast_slice(&instance_data),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let container = Prefab::new(
+            instance_buffer,
+            MeshType::SingleMesh(mesh),
+            instances.len() as u32,
+        );
+        let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
+        let entry = update_instance.prefab_slab.vacant_entry();
+        let key = entry.key();
+        for instance in instances {
+            instance.prefab_index = key;
+        }
+        entry.insert(container);
+    }
+    pub fn make_sprites(
+        &mut self,
+        instances: Vec<&mut Instance>,
+        material: Material,
+        is_updating: bool,
+    ) {
+        let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
