@@ -1,6 +1,6 @@
 use crate::{
     camera::{Camera, CameraStruct},
-    model::{Material, Mesh},
+    model::Material,
     prefabs::Prefab,
     prelude::{Vertex, Instance},
     loader::{self, load_texture},
@@ -12,7 +12,7 @@ use bevy_ecs::prelude::*;
 use glam::Vec2;
 use instant::Duration;
 use slab::Slab;
-use wgpu::{util::DeviceExt, Buffer};
+use wgpu::util::DeviceExt;
 use winit::{
     dpi::PhysicalPosition,
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
