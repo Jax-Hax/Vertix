@@ -1,6 +1,6 @@
 use crate::{
     camera::{Camera, CameraStruct},
-    model::Material,
+    model::{Material, Mesh},
     prefabs::Prefab,
     prelude::{Vertex, Instance},
     loader::{self, load_texture},
@@ -12,7 +12,7 @@ use bevy_ecs::prelude::*;
 use glam::Vec2;
 use instant::Duration;
 use slab::Slab;
-use wgpu::util::DeviceExt;
+use wgpu::{util::DeviceExt, Buffer};
 use winit::{
     dpi::PhysicalPosition,
     event::{ElementState, KeyboardInput, MouseButton, WindowEvent},
@@ -139,6 +139,7 @@ impl State {
         world.insert_resource(WindowEvents { keys_pressed: vec![] });
         let schedule = Schedule::default();
         (
+            
             Self {
                 device,
                 config,
@@ -345,31 +346,24 @@ impl State {
         &mut self,
         instances: Vec<&mut Instance>,
         material: Material,
-        is_updating: bool,
     ) {
+        //make sprite mesh
         let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
-        let vertex_buffer = self
-            .device
+        let vertex_buffer = self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
                 contents: bytemuck::cast_slice(&vertices),
-                usage: if is_updating {
-                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
-                } else {
-                    wgpu::BufferUsages::VERTEX
-                },
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             });
-        let index_buffer = self
-            .device
+        let index_buffer = self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Index Buffer"),
                 contents: bytemuck::cast_slice(&indices),
                 usage: wgpu::BufferUsages::INDEX,
             });
+            
         let mesh = SingleMesh {
-            vertex_buffer,
-            index_buffer,
-            num_elements: indices.len() as u32,
+            vertex_buffer,index_buffer, num_elements: indices.len() as u32,
             material,
         };
         let mut instance_data = vec![];
