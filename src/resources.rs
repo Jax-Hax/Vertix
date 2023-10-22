@@ -1,10 +1,8 @@
 use bevy_ecs::system::Resource;
-use instant::Duration;
 use slab::Slab;
 use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 
 use crate::prefabs::Prefab;
-
 #[derive(Resource)]
 pub struct MousePos {
     pub pos: PhysicalPosition<f32>,
@@ -38,5 +36,22 @@ impl WindowEvents {
 }
 #[derive(Resource)]
 pub struct DeltaTime {
-    pub dt: Duration,
+    pub dt: instant::Duration,
+}
+pub struct Timer {
+    pub time_left: time::Duration,
+}
+impl Timer {
+    pub fn finished(&self) -> bool {
+        if self.time_left.is_negative() || self.time_left.is_zero() {
+            return true
+        }
+        false
+    }
+    pub fn tick(&mut self, delta_time: instant::Duration) {
+        self.time_left -= delta_time;
+    }
+    pub fn new(duration: instant::Duration) -> Self {
+        Self {time_left: time::Duration::new(duration.as_secs() as i64, duration.subsec_nanos() as i32)}
+    }
 }
