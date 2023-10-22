@@ -62,7 +62,10 @@ fn movement(
     };
     for (mut instance,) in &mut query {
         instance.position[0] += 10. * delta_time_to_seconds(delta_time.dt);
-        instances.push(instance.to_raw());
+        let instance_raw = instance.to_raw();
+        if instance_raw.is_some() {
+            instances.push(instance_raw.unwrap());
+        }
         temp_instance = *instance;
     }
     temp_instance.update(instances, &mut instance_update);
@@ -80,7 +83,10 @@ fn movement_with_key(
         };
         for (mut instance,) in &mut query {
             instance.position[1] += 50. * delta_time_to_seconds(delta_time.dt);
-            instances.push(instance.to_raw());
+            let instance_raw = instance.to_raw();
+            if instance_raw.is_some() {
+                instances.push(instance_raw.unwrap());
+            }
             temp_instance = *instance;
         }
         temp_instance.update(instances, &mut instance_update);

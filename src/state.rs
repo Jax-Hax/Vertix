@@ -237,7 +237,10 @@ impl State {
         .unwrap();
         let mut instance_data = vec![];
         for instance in &instances {
-            instance_data.push(instance.to_raw());
+            let instance_raw = instance.to_raw();
+            if instance_raw.is_some() {
+                instance_data.push(instance_raw.unwrap());
+            }
         }
         let instance_buffer = self
             .device
@@ -320,7 +323,10 @@ impl State {
         };
         let mut instance_data = vec![];
         for instance in &instances {
-            instance_data.push(instance.to_raw());
+            let instance_raw = instance.to_raw();
+            if instance_raw.is_some() {
+                instance_data.push(instance_raw.unwrap());
+            }
         }
         let instance_buffer = self
             .device
@@ -368,7 +374,10 @@ impl State {
         };
         let mut instance_data = vec![];
         for instance in &instances {
-            instance_data.push(instance.to_raw());
+            let instance_raw = instance.to_raw();
+            if instance_raw.is_some() {
+                instance_data.push(instance_raw.unwrap());
+            }
         }
         let instance_buffer = self
             .device

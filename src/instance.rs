@@ -10,16 +10,17 @@ pub struct Instance {
     pub color: [f32; 4],
     pub is_world_space: bool,
     pub prefab_index: usize,
+    pub enabled: bool
 }
 impl Default for Instance {
     fn default() -> Self {
-        Instance { position: Vec3::ZERO, rotation: Quat::IDENTITY, color: [1.0,1.0,1.0,1.0], is_world_space: true, prefab_index: 0 }
+        Instance { position: Vec3::ZERO, rotation: Quat::IDENTITY, color: [1.0,1.0,1.0,1.0], is_world_space: true, prefab_index: 0, enabled: true }
     }
 }
 
 impl Instance {
-    pub fn to_raw(&self) -> InstanceRaw {
-        InstanceRaw::new(self.position, self.rotation, self.color, self.is_world_space)
+    pub fn to_raw(&self) -> Option<InstanceRaw> {
+        if self.enabled {Some(InstanceRaw::new(self.position, self.rotation, self.color, self.is_world_space))} else {None}
     }
     pub fn update(&self, instances: Vec<InstanceRaw>, instance_update: &mut UpdateInstance) {
         instance_update.prefab_slab.get_mut(self.prefab_index).unwrap().update_buffer(instances, &instance_update.queue);
