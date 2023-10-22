@@ -15,7 +15,6 @@ pub struct SingleMesh {
     pub num_elements: u32,
     pub material: Material,
 }
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {

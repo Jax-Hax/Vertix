@@ -25,7 +25,6 @@ pub fn run_event_loop(
                 window_id,
             } if window_id == state.window().id() => {
                 state.input(event);
-                println!("{:#?}", event);
                 match event {
                     #[cfg(not(target_arch="wasm32"))]
                     WindowEvent::CloseRequested
