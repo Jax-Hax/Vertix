@@ -236,10 +236,12 @@ impl State {
         .await
         .unwrap();
         let mut instance_data = vec![];
+        let mut length = 0;
         for instance in &instances {
             let instance_raw = instance.to_raw();
             if instance_raw.is_some() {
                 instance_data.push(instance_raw.unwrap());
+                length += 1;
             }
         }
         let instance_buffer = self
@@ -256,7 +258,7 @@ impl State {
         let container = Prefab::new(
             instance_buffer,
             MeshType::Model(loaded_model),
-            instances.len() as u32,
+            length,
         );
         let entry = instance_updater.prefab_slab.vacant_entry();
         let key = entry.key();
@@ -322,10 +324,12 @@ impl State {
             material,
         };
         let mut instance_data = vec![];
+        let mut length = 0;
         for instance in &instances {
             let instance_raw = instance.to_raw();
             if instance_raw.is_some() {
                 instance_data.push(instance_raw.unwrap());
+                length += 1;
             }
         }
         let instance_buffer = self
@@ -338,7 +342,7 @@ impl State {
         let container = Prefab::new(
             instance_buffer,
             MeshType::SingleMesh(mesh),
-            instances.len() as u32,
+            length,
         );
         let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
         let entry = update_instance.prefab_slab.vacant_entry();
@@ -373,10 +377,12 @@ impl State {
             material,
         };
         let mut instance_data = vec![];
+        let mut length = 0;
         for instance in &instances {
             let instance_raw = instance.to_raw();
             if instance_raw.is_some() {
                 instance_data.push(instance_raw.unwrap());
+                length += 1;
             }
         }
         let instance_buffer = self
@@ -389,7 +395,7 @@ impl State {
         let container = Prefab::new(
             instance_buffer,
             MeshType::SingleMesh(mesh),
-            instances.len() as u32,
+            length,
         );
         let mut update_instance = self.world.get_resource_mut::<UpdateInstance>().unwrap();
         let entry = update_instance.prefab_slab.vacant_entry();
