@@ -304,11 +304,7 @@ impl State {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
                 contents: bytemuck::cast_slice(&vertices),
-                usage: if is_updating {
-                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
-                } else {
-                    wgpu::BufferUsages::VERTEX
-                },
+                usage: wgpu::BufferUsages::VERTEX,
             });
         let index_buffer = self
             .device
@@ -337,7 +333,11 @@ impl State {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
                 contents: bytemuck::cast_slice(&instance_data),
-                usage: wgpu::BufferUsages::VERTEX,
+                usage: if is_updating {
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                } else {
+                    wgpu::BufferUsages::VERTEX
+                },
             });
         let container = Prefab::new(
             instance_buffer,
@@ -356,6 +356,7 @@ impl State {
         &mut self,
         instances: Vec<&mut Instance>,
         material: Material,
+        is_updating: bool
     ) {
         //make sprite mesh
         let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
@@ -363,7 +364,7 @@ impl State {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
                 contents: bytemuck::cast_slice(&vertices),
-                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                usage: wgpu::BufferUsages::VERTEX,
             });
         let index_buffer = self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -390,7 +391,11 @@ impl State {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
                 contents: bytemuck::cast_slice(&instance_data),
-                usage: wgpu::BufferUsages::VERTEX,
+                usage: if is_updating {
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                } else {
+                    wgpu::BufferUsages::VERTEX
+                },
             });
         let container = Prefab::new(
             instance_buffer,
