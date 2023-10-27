@@ -26,7 +26,6 @@ impl Box2D {
         let y = pos.y;
         if self.enabled{
             if x < self.x_max && x > self.x_min && y < self.y_max && y > self.y_min {
-                println!("collision");
                 return true;
             }
         }
@@ -57,7 +56,6 @@ impl Circle {
         let dist_y = (y - self.center_y).powi(2);
         let dist = (dist_x + dist_y).sqrt();
         if self.enabled && dist < self.radius {
-            println!("collision");
             return true;
         }
         return false;

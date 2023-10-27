@@ -28,9 +28,11 @@ struct VertexOutput {
 
 @vertex
 fn vs_main(
-    model: VertexInput,
+    vertex: VertexInput,
     instance: InstanceInput,
 ) -> VertexOutput {
+    var model = vertex;
+    if (instance.is_world_space == u32(0)) {model.position.y = model.position.y * camera.view_pos.w;} //hid the aspect ratio in the w component
     let model_matrix = mat4x4<f32>(
         instance.model_matrix_0,
         instance.model_matrix_1,

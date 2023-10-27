@@ -30,9 +30,11 @@ impl CameraUniform {
             view_proj: Mat4::IDENTITY.to_cols_array_2d(), //maybe here
         }
     }
-
+    pub fn update_screen_size(&mut self, width: u32, height: u32) {
+        self.view_position[3] = (width as f32) /(height as f32);
+    }
     pub fn update_view_proj(&mut self, camera: &Camera, projection: &Projection) {
-        self.view_position = camera.position.extend(1.).into();
+        self.view_position = camera.position.extend(self.view_position[3]).into();
         self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).to_cols_array_2d();
     }
 }
@@ -51,7 +53,8 @@ impl CameraStruct{
     
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera, &projection);
-    
+        camera_uniform.update_screen_size(config.width, config.height);
+
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
             contents: bytemuck::cast_slice(&[camera_uniform]),
