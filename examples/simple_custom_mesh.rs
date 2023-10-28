@@ -7,7 +7,7 @@ fn main() {
 pub async fn run() {
     let camera = Camera::new(Vec3::new(0.0, 0.0, 10.0), f32::to_radians(-90.0), f32::to_radians(0.0));
     // State::new uses async code, so we're going to wait for it to finish
-    let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
+    let (mut state, event_loop) = State::new(false, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //custom mesh
     let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
     let mut instance = Instance {is_world_space: true, ..Default::default()};
