@@ -4,10 +4,6 @@ use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 
 use crate::prefabs::Prefab;
 #[derive(Resource)]
-pub struct MousePos {
-    pub pos: PhysicalPosition<f32>,
-}
-#[derive(Resource)]
 pub struct UpdateInstance {
     pub queue: wgpu::Queue,
     pub prefab_slab: Slab<Prefab>,
@@ -15,6 +11,10 @@ pub struct UpdateInstance {
 #[derive(Resource)]
 pub struct WindowEvents {
     pub keys_pressed: Vec<(VirtualKeyCode, ElementState)>,
+    pub mouse_pos: PhysicalPosition<f32>,
+    pub left_mouse_clicked: bool,
+    pub right_mouse_clicked: bool,
+    pub middle_mouse_clicked: bool,
 }
 impl WindowEvents {
     pub fn is_key_pressed(&self, key: VirtualKeyCode, press_type: Option<ElementState>) -> bool {

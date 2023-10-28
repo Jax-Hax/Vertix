@@ -1,7 +1,7 @@
 use instant::Duration;
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::State, render::render, resources::{WindowEvents, MousePos, DeltaTime}};
+use crate::{state::State, render::render, resources::{WindowEvents, DeltaTime}};
 
 pub fn run_event_loop(
     mut state: State,
@@ -17,7 +17,7 @@ pub fn run_event_loop(
             Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
-            } => if state.mouse_pressed || state.mouse_locked {
+            } => if state.world.get_resource_mut::<WindowEvents>().unwrap().left_mouse_clicked || state.mouse_locked {
                 state.camera.camera_controller.process_mouse(delta.0, delta.1)
             }
             Event::WindowEvent {
@@ -38,8 +38,8 @@ pub fn run_event_loop(
                         ..
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::CursorMoved { position, .. } => {
-                        let mut mouse_pos = state.world.get_resource_mut::<MousePos>().unwrap();
-                        mouse_pos.pos = state.window.normalize_position(position);
+                        let mut mouse_pos = state.world.get_resource_mut::<WindowEvents>().unwrap();
+                        mouse_pos.mouse_pos = state.window.normalize_position(position);
                     }
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);

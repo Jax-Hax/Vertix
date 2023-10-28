@@ -38,8 +38,13 @@ pub async fn run() {
     //render loop
     run_event_loop(state, event_loop, Some(default_3d_cam));
 }
-fn movement(query: Query<(&Instance, &Box2D)>, mouse_pos: Res<MousePos>) {
+fn movement(query: Query<(&Instance, &Box2D)>, window_events: Res<WindowEvents>) {
     for (_instance, collider) in &query {
-        collider.check_collision(&mouse_pos.pos);
+        if collider.check_collision(&window_events.mouse_pos) {
+            //println!("collision");
+            if window_events.left_mouse_clicked {
+                println!("click")
+            }
+        }
     }
 }
