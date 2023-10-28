@@ -42,7 +42,7 @@ fn movement(query: Query<(&Instance, &Box2D)>, window_events: Res<WindowEvents>)
     for (_instance, collider) in &query {
         if collider.check_collision(&window_events.mouse_pos) {
             //println!("collision");
-            if window_events.left_mouse_clicked {
+            if window_events.left_clicked() {
                 println!("click")
             }
         }

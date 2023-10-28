@@ -6,7 +6,7 @@ use crate::{
     loader::{self, load_texture},
     shader,
     structs::{CameraController, MeshType, SingleMesh},
-    texture, window, resources::{UpdateInstance, DeltaTime, WindowEvents}, primitives::rect,
+    texture, window, resources::{UpdateInstance, DeltaTime, WindowEvents, MouseClickType}, primitives::rect,
 };
 use bevy_ecs::prelude::*;
 use glam::Vec2;
@@ -132,7 +132,7 @@ impl State {
             prefab_slab: Slab::new(),
         });
         world.insert_resource(DeltaTime { dt: Duration::ZERO });
-        world.insert_resource(WindowEvents { keys_pressed: vec![], mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, left_mouse_clicked: false, right_mouse_clicked: false, middle_mouse_clicked: false });
+        world.insert_resource(WindowEvents { keys_pressed: vec![], mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld });
         let schedule = Schedule::default();
         (
             
@@ -201,9 +201,9 @@ impl State {
                     .get_resource_mut::<WindowEvents>()
                     .unwrap();
                 match button {
-                    MouseButton::Left => events.left_mouse_clicked = *state == ElementState::Pressed,
-                    MouseButton::Right => events.right_mouse_clicked = *state == ElementState::Pressed,
-                    MouseButton::Middle => events.middle_mouse_clicked = *state == ElementState::Pressed,
+                    MouseButton::Left => events.left_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
+                    MouseButton::Right => events.right_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
+                    MouseButton::Middle => events.middle_mouse = if *state == ElementState::Pressed {MouseClickType::Clicked} else {MouseClickType::Released},
                     _ => {}
                 }
                 true

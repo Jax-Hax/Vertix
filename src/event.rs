@@ -17,7 +17,7 @@ pub fn run_event_loop(
             Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
-            } => if state.world.get_resource_mut::<WindowEvents>().unwrap().left_mouse_clicked || state.mouse_locked {
+            } => if state.world.get_resource_mut::<WindowEvents>().unwrap().left_held() || state.mouse_locked {
                 state.camera.camera_controller.process_mouse(delta.0, delta.1)
             }
             Event::WindowEvent {
@@ -61,7 +61,7 @@ pub fn run_event_loop(
                 }
                 state.update();
                 state.schedule.run(&mut state.world);
-                state.world.get_resource_mut::<WindowEvents>().unwrap().keys_pressed = vec![];
+                state.world.get_resource_mut::<WindowEvents>().unwrap().next_frame();
                 match render(&mut state) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
