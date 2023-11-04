@@ -21,7 +21,7 @@ pub const OPENGL_TO_WGPU_MATRIX: Mat4 = Mat4::from_cols_array(
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct CameraUniform {
     view_position: [f32; 4],
-    view_proj: [[f32; 4]; 4],
+    pub view_proj: [[f32; 4]; 4],
 }
 impl CameraUniform {
     pub fn new() -> Self {

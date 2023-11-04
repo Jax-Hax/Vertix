@@ -1,7 +1,8 @@
 use bevy_ecs::system::Resource;
+use glam::{Vec4, Vec3, Mat4};
 use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 
-use crate::camera::Camera;
+use crate::camera::{Camera, Projection};
 #[derive(Resource)]
 pub struct WindowEvents {
     pub keys_pressed: Vec<(VirtualKeyCode, ElementState)>,
@@ -68,7 +69,6 @@ impl WindowEvents {
     pub fn update_mouse_pos(&mut self, normalized_mouse_pos: PhysicalPosition<f32>, camera_transform: &mut Camera){
         self.screen_mouse_pos = normalized_mouse_pos;
         self.world_mouse_pos = PhysicalPosition::new(normalized_mouse_pos.x + camera_transform.position.x, normalized_mouse_pos.y + camera_transform.position.y);
-        println!("mouse pos: {:#?}", normalized_mouse_pos);
     }
     pub fn update_mouse_pos_with_cam_if_cam_2d(&mut self, camera_transform: &mut Camera){ //only works if cam is in 2d and isnt rotated
         let normalized_mouse_pos = self.screen_mouse_pos;
@@ -76,6 +76,15 @@ impl WindowEvents {
     }
     pub fn update_aspect_ratio(&mut self, width: u32, height: u32) {
         self.aspect_ratio = (width as f32) /(height as f32);
+    }
+    pub fn calculate_mouse_dir(&mut self, proj_matrix: &Projection, view_matrix: &[[f32; 4]; 4]) {
+        let ray_clip = Vec4::new(self.screen_mouse_pos.x, self.screen_mouse_pos.y, -1.0, 1.0); //screen mosue pos is (-1,-1) to (1,1)
+        let mut ray_eye = proj_matrix.calc_matrix().inverse() * ray_clip;
+        ray_eye = Vec4::new(ray_eye.x, ray_eye.y, -1.0, 0.0);
+        let view_mat = Mat4::from_cols_array_2d(&view_matrix);
+        let ray_wor = view_mat.inverse() * ray_eye;
+        let ray_world = Vec3::new(ray_wor.x,ray_wor.y,ray_wor.z).normalize();
+        println!("{}", ray_world);
     }
 }
 #[derive(Resource)]

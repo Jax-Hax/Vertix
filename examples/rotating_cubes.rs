@@ -16,7 +16,7 @@ pub async fn run() {
         f32::to_radians(-20.0),
     );
     // State::new uses async code, so we're going to wait for it to finish
-    let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
+    let (mut state, event_loop) = State::new(false, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     //add models
     const SPACE_BETWEEN: f32 = 3.0;
     const NUM_INSTANCES_PER_ROW: usize = 100;

@@ -1,4 +1,4 @@
-use glam::Vec2;
+use glam::{Vec2, Vec3};
 use winit::dpi::PhysicalPosition;
 
 use bevy_ecs::prelude::*;
@@ -62,3 +62,9 @@ impl Circle {
         return false;
     }
 }
+pub fn oriented_bounding_box_with_ray(
+    ray_origin: Vec3,        // Ray origin, in world space
+	ray_direction: Vec3,     // Ray direction (NOT target position!), in world space. Must be normalize()'d.
+	aabb_min: Vec3,          // Minimum X,Y,Z coords of the mesh when not transformed at all.
+	aabb_max: Vec3,          // Maximum X,Y,Z coords. Often aabb_min*-1 if your mesh is centered, but it's not always the case.
+	model_matrix) -> f32 /*intersection distance */
