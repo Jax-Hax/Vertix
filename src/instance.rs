@@ -1,7 +1,6 @@
 use bevy_ecs::component::Component;
 use glam::{Quat, Vec3, Mat4, Vec2};
 
-use crate::resources::UpdateInstance;
 
 #[derive(Debug, Copy, Clone, Component)]
 pub struct Instance {

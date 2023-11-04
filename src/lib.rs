@@ -12,6 +12,7 @@ pub mod collision;
 pub mod event;
 pub mod resources;
 pub mod instance;
+pub mod assets;
 mod render;
 pub mod prelude {
     pub use crate::{

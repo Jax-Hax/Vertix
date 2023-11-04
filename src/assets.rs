@@ -3,7 +3,7 @@ use glam::Vec2;
 use slab::Slab;
 use wgpu::{Device, Queue, util::DeviceExt, BindGroupLayout};
 
-use crate::{material::Material, prelude::{Vertex, Instance}, primitives::rect, prefabs::Prefab, structs::Mesh, loader::load_texture};
+use crate::{prelude::{Vertex, Instance}, primitives::rect, prefabs::Prefab, structs::{MeshType, SingleMesh}, loader::{load_texture, load_model}, model::Material};
 
 #[derive(Resource)]
 pub struct AssetServer {
@@ -88,7 +88,7 @@ impl AssetServer {
                 contents: bytemuck::cast_slice(&indices),
                 usage: wgpu::BufferUsages::INDEX,
             });
-        let mesh = Mesh {
+        let mesh = SingleMesh {
             vertex_buffer,
             index_buffer,
             num_elements: indices.len() as u32,
@@ -116,7 +116,54 @@ impl AssetServer {
             });
         let container = Prefab::new(
             instance_buffer,
-            mesh,
+            MeshType::SingleMesh(mesh),
+            length,
+        );
+        let entry = self.prefab_slab.vacant_entry();
+        let key = entry.key();
+        for instance in instances {
+            instance.prefab_index = key;
+        }
+        entry.insert(container);
+    }
+    pub async fn create_model_instances(
+        &mut self,
+        model: &str,
+        instances: Vec<&mut Instance>,
+        is_updating: bool,
+    ) {
+        let loaded_model = load_model(
+            model,
+            &self.build_path,
+            &self.device,
+            &self.queue,
+            &self.texture_bind_group_layout,
+        )
+        .await
+        .unwrap();
+        let mut instance_data = vec![];
+        let mut length = 0;
+        for instance in &instances {
+            let instance_raw = instance.to_raw();
+            if instance_raw.is_some() {
+                instance_data.push(instance_raw.unwrap());
+                length += 1;
+            }
+        }
+        let instance_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Instance Buffer"),
+                contents: bytemuck::cast_slice(&instance_data),
+                usage: if is_updating {
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                } else {
+                    wgpu::BufferUsages::VERTEX
+                },
+            });
+        let container = Prefab::new(
+            instance_buffer,
+            MeshType::Model(loaded_model),
             length,
         );
         let entry = self.prefab_slab.vacant_entry();
@@ -147,7 +194,7 @@ impl AssetServer {
                 usage: wgpu::BufferUsages::INDEX,
             });
             
-        let mesh = Mesh {
+        let mesh = SingleMesh {
             vertex_buffer,index_buffer, num_elements: indices.len() as u32,
             material_idx,
         };
@@ -173,7 +220,7 @@ impl AssetServer {
             });
         let container = Prefab::new(
             instance_buffer,
-            mesh,
+            MeshType::SingleMesh(mesh),
             length,
         );
         let entry = self.prefab_slab.vacant_entry();

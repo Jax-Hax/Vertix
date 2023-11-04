@@ -1,20 +1,16 @@
 use bevy_ecs::system::Resource;
-use slab::Slab;
 use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 
-use crate::prefabs::Prefab;
-#[derive(Resource)]
-pub struct UpdateInstance {
-    pub queue: wgpu::Queue,
-    pub prefab_slab: Slab<Prefab>,
-}
+use crate::camera::Camera;
 #[derive(Resource)]
 pub struct WindowEvents {
     pub keys_pressed: Vec<(VirtualKeyCode, ElementState)>,
-    pub mouse_pos: PhysicalPosition<f32>,
+    pub screen_mouse_pos: PhysicalPosition<f32>,
+    pub world_mouse_pos: PhysicalPosition<f32>,
     pub left_mouse: MouseClickType,
     pub right_mouse: MouseClickType,
     pub middle_mouse: MouseClickType,
+    pub aspect_ratio: f32,
 }
 pub enum MouseClickType{
     Clicked,
@@ -68,6 +64,17 @@ impl WindowEvents {
             MouseClickType::Released => self.left_mouse = MouseClickType::NotHeld,
             _ => {}
         }
+    }
+    pub fn update_mouse_pos(&mut self, normalized_mouse_pos: PhysicalPosition<f32>, camera_transform: &mut Camera){
+        self.screen_mouse_pos = normalized_mouse_pos;
+        self.world_mouse_pos = PhysicalPosition::new(normalized_mouse_pos.x + camera_transform.position.x, normalized_mouse_pos.y + camera_transform.position.y);
+    }
+    pub fn update_mouse_pos_with_cam_if_cam_2d(&mut self, camera_transform: &mut Camera){ //only works if cam is in 2d and isnt rotated
+        let normalized_mouse_pos = self.screen_mouse_pos;
+        self.world_mouse_pos = PhysicalPosition::new(normalized_mouse_pos.x + camera_transform.position.x, normalized_mouse_pos.y + camera_transform.position.y);
+    }
+    pub fn update_aspect_ratio(&mut self, width: u32, height: u32) {
+        self.aspect_ratio = (width as f32) /(height as f32);
     }
 }
 #[derive(Resource)]

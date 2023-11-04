@@ -3,6 +3,8 @@ use winit::dpi::PhysicalPosition;
 
 use bevy_ecs::prelude::*;
 
+use crate::{resources::WindowEvents, prelude::Instance};
+
 #[derive(Component)]
 pub struct Box2D {
     x_max: f32,

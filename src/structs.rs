@@ -1,4 +1,4 @@
-use crate::model::{Material, Model};
+use crate::model::Model;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 use winit::{
@@ -13,7 +13,7 @@ pub struct SingleMesh {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub num_elements: u32,
-    pub material: Material,
+    pub material_idx: usize,
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
