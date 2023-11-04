@@ -12,6 +12,7 @@ pub struct WindowEvents {
     pub right_mouse: MouseClickType,
     pub middle_mouse: MouseClickType,
     pub aspect_ratio: f32,
+    pub mouse_dir_ray: Vec3,
 }
 pub enum MouseClickType{
     Clicked,
@@ -84,7 +85,7 @@ impl WindowEvents {
         let view_mat = Mat4::from_cols_array_2d(&view_matrix);
         let ray_wor = view_mat.inverse() * ray_eye;
         let ray_world = Vec3::new(ray_wor.x,ray_wor.y,ray_wor.z).normalize();
-        println!("{}", ray_world);
+        self.mouse_dir_ray = ray_world;
     }
 }
 #[derive(Resource)]

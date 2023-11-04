@@ -63,6 +63,7 @@ impl Circle {
         return false;
     }
 }
+#[derive(Component,Resource)]
 pub struct OrientedBoundingBox {
     pub aabb_min: Vec3,
     pub aabb_max: Vec3,
@@ -77,7 +78,7 @@ impl OrientedBoundingBox {
             aabb_max: Vec3::new(x,y,z),
         }
     }
-    pub fn check_collision_with_ray(&self, ray_origin: Vec3, ray_direction: Vec3, instance: Instance) -> bool {
+    pub fn check_collision_with_ray(&self, ray_origin: Vec3, ray_direction: Vec3, instance: &Instance) -> bool {
         if !instance.enabled {
             return false;
         }

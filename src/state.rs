@@ -5,6 +5,7 @@ use crate::{
     texture, window, resources::{DeltaTime, WindowEvents, MouseClickType}, assets::AssetServer,
 };
 use bevy_ecs::prelude::*;
+use glam::Vec3;
 use instant::Duration;
 use winit::{
     dpi::PhysicalPosition,
@@ -119,7 +120,9 @@ impl State {
         let mut world = World::new();
         world.insert_resource(AssetServer::new(device, queue, build_path.to_string(),texture_bind_group_layout));
         world.insert_resource(DeltaTime { dt: Duration::ZERO });
-        world.insert_resource(WindowEvents { keys_pressed: vec![], screen_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, world_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld, aspect_ratio: (config.width as f32)/(config.height as f32) });
+        let mut window_events = WindowEvents { keys_pressed: vec![], screen_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 }, world_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },left_mouse: MouseClickType::NotHeld, right_mouse: MouseClickType::NotHeld, middle_mouse: MouseClickType::NotHeld, aspect_ratio: (config.width as f32)/(config.height as f32), mouse_dir_ray: Vec3::ZERO };
+        window_events.calculate_mouse_dir(&camera.projection, &camera.camera_uniform.view_proj);
+        world.insert_resource(window_events);
         let schedule = Schedule::default();
         (
             

@@ -2,7 +2,7 @@ use bevy_ecs::system::{Query, Res, ResMut};
 use glam::{Quat, Vec3};
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*, assets::AssetServer,
+    prelude::*, assets::AssetServer, collision::OrientedBoundingBox,
 };
 
 fn main() {
@@ -39,6 +39,7 @@ pub async fn run() {
             instances.push((instance,));
         }
     }
+    let obb = OrientedBoundingBox::new(2.,2.,2.);
     let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
     asset_server
         .create_model_instances(
@@ -48,6 +49,7 @@ pub async fn run() {
         )
         .await;
     state.world.spawn_batch(instances);
+    state.world.insert_resource(obb);
     state.schedule.add_systems((movement, movement_with_key));
     //render loop
     run_event_loop(state, event_loop, Some(default_3d_cam));
@@ -76,6 +78,7 @@ fn movement_with_key(
     mut instance_update: ResMut<AssetServer>,
     delta_time: Res<DeltaTime>,
     window_events: Res<WindowEvents>,
+    obb: Res<OrientedBoundingBox>
 ) {
     if window_events.is_key_pressed(VirtualKeyCode::D, None) {
         let mut instances = vec![];
@@ -90,6 +93,7 @@ fn movement_with_key(
             }
             temp_instance = *instance;
         }
+        obb.check_collision_with_ray(ray_origin, window_events.mouse_dir_ray, &temp_instance);
         temp_instance.update(instances, &mut instance_update);
     }
 }
