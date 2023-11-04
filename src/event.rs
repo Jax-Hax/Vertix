@@ -39,7 +39,7 @@ pub fn run_event_loop(
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::CursorMoved { position, .. } => {
                         let mut mouse_pos = state.world.get_resource_mut::<WindowEvents>().unwrap();
-                        mouse_pos.mouse_pos = state.window.normalize_position(position);
+                        mouse_pos.update_mouse_pos(state.window.normalize_position(position), &mut state.camera.camera_transform);
                     }
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);
