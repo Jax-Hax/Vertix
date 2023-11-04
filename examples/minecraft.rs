@@ -302,8 +302,8 @@ pub fn build_chunk(
     let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
     asset_server
         .build_mesh(
-            vertices,
-            indices,
+            (vertices,
+            indices),
             vec![&mut Instance{..Default::default()}], //since we are just discarding the instance afterward and not doing anything to it we don't need to add to world
             material_idx,false
         );

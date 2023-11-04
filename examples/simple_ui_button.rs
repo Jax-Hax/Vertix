@@ -3,7 +3,7 @@ use vertix::{
     camera::{default_3d_cam, Camera},
     collision::Box2D,
     prelude::*,
-    primitives::rect, assets::AssetServer,
+    shapes::rect, assets::AssetServer,
 };
 use bevy_ecs::prelude::*;
 fn main() {
@@ -21,7 +21,6 @@ pub async fn run() {
     //custom mesh
     let p1 = Vec2::new(-0.5, -0.5);
     let p2 = Vec2::new(0.5, 0.5);
-    let (vertices, indices) = rect(p1,p2);
     let collider = Box2D::new(p1,p2);
     let mut instance = Instance {is_world_space: false, ..Default::default()};
     let mut instances = vec![];
@@ -29,8 +28,7 @@ pub async fn run() {
     let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
     let material_idx = asset_server.compile_material("rounded_rect.png").await;
     asset_server.build_mesh(
-        vertices,
-        indices,
+        rect(1.,1.),
         instances,
         material_idx,
         false,

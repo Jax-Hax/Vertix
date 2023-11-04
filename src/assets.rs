@@ -1,9 +1,8 @@
 use bevy_ecs::system::Resource;
-use glam::Vec2;
 use slab::Slab;
 use wgpu::{Device, Queue, util::DeviceExt, BindGroupLayout};
 
-use crate::{prelude::{Vertex, Instance}, primitives::rect, prefabs::Prefab, structs::{MeshType, SingleMesh}, loader::{load_texture, load_model}, model::Material};
+use crate::{prelude::{Vertex, Instance}, shapes::rect, prefabs::Prefab, structs::{MeshType, SingleMesh}, loader::{load_texture, load_model}, model::Material};
 
 #[derive(Resource)]
 pub struct AssetServer {
@@ -68,8 +67,7 @@ impl AssetServer {
     }
     pub fn build_mesh(
         &mut self,
-        vertices: Vec<Vertex>,
-        indices: Vec<u32>,
+        (vertices,indices): (Vec<Vertex>,Vec<u32>),
         instances: Vec<&mut Instance>,
         material_idx: usize,
         is_updating: bool
@@ -180,7 +178,7 @@ impl AssetServer {
         is_updating: bool
     ) {
         //make sprite mesh
-        let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
+        let (vertices, indices) = rect(1.,1.);
         let vertex_buffer = self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),

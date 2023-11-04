@@ -7,7 +7,7 @@ pub mod state;
 pub mod texture;
 pub mod window;
 pub mod prefabs;
-pub mod primitives;
+pub mod shapes;
 pub mod collision;
 pub mod event;
 pub mod resources;
