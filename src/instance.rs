@@ -37,7 +37,7 @@ impl Instance {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct InstanceRaw {
-    model: [[f32; 4]; 4],
+    pub model: [[f32; 4]; 4],
     color: [f32; 4],
     is_world_space: u32,
 }

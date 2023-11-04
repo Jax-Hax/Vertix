@@ -63,6 +63,28 @@ impl Circle {
         return false;
     }
 }
+pub struct OrientedBoundingBox {
+    pub aabb_min: Vec3,
+    pub aabb_max: Vec3,
+}
+impl OrientedBoundingBox {
+    pub fn new(x_len: f32, y_len: f32, z_len: f32) -> Self {
+        let x = x_len/2.;
+        let y = y_len/2.;
+        let z = z_len/2.;
+        Self {
+            aabb_min: Vec3::new(-x,-y,-z),
+            aabb_max: Vec3::new(x,y,z),
+        }
+    }
+    pub fn check_collision_with_ray(&self, ray_origin: Vec3, ray_direction: Vec3, instance: Instance) -> bool {
+        if !instance.enabled {
+            return false;
+        }
+        let model_matrix = instance.to_raw().unwrap().model;
+        oriented_bounding_box_with_ray(ray_origin, ray_direction, self.aabb_min, self.aabb_max, model_matrix)
+    }
+}
 pub fn oriented_bounding_box_with_ray(
     ray_origin: Vec3,    // Ray origin, in world space
     ray_direction: Vec3, // Ray direction (NOT target position!), in world space. Must be normalize()'d.

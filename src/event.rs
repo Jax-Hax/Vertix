@@ -1,7 +1,7 @@
 use instant::Duration;
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::State, render::render, resources::{WindowEvents, DeltaTime}, mouse_picking::calculate_mouse_dir};
+use crate::{state::State, render::render, resources::{WindowEvents, DeltaTime}};
 
 pub fn run_event_loop(
     mut state: State,
@@ -40,7 +40,7 @@ pub fn run_event_loop(
                     WindowEvent::CursorMoved { position, .. } => {
                         let mut mouse_pos = state.world.get_resource_mut::<WindowEvents>().unwrap();
                         mouse_pos.update_mouse_pos(state.window.normalize_position(position), &mut state.camera.camera_transform);
-                        calculate_mouse_dir(&mouse_pos.screen_mouse_pos, &state.camera.projection, &state.camera.camera_uniform.view_proj);
+                        mouse_pos.calculate_mouse_dir(&state.camera.projection, &state.camera.camera_uniform.view_proj);
                     }
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);
