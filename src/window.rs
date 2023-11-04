@@ -29,7 +29,7 @@ impl Window {
             .map_or(PhysicalSize::new(800, 600), |vm| vm.size());
         let window = WindowBuilder::new()
             .with_title("WGPUCraft")
-            .with_fullscreen(video_mode.map(|vm| Fullscreen::Exclusive(vm)))
+            .with_fullscreen(Some(Fullscreen::Borderless(Some(monitor))))
             .build(&event_loop)
             .unwrap();
 
