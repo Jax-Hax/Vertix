@@ -13,6 +13,7 @@ pub mod event;
 pub mod resources;
 pub mod instance;
 pub mod assets;
+pub mod mouse_picking;
 mod render;
 pub mod prelude {
     pub use crate::{
