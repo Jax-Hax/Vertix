@@ -67,7 +67,7 @@ impl WindowEvents {
             _ => {}
         }
     }
-    pub fn update_mouse_pos(&mut self, normalized_mouse_pos: PhysicalPosition<f32>, camera_transform: &mut Camera){
+    pub fn update_mouse_pos(&mut self, normalized_mouse_pos: PhysicalPosition<f32>, camera_transform: &Camera){
         self.screen_mouse_pos = normalized_mouse_pos;
         self.world_mouse_pos = PhysicalPosition::new(normalized_mouse_pos.x + camera_transform.position.x, normalized_mouse_pos.y + camera_transform.position.y);
     }

@@ -1,5 +1,5 @@
 use std::iter;
-use crate::{state::State, assets::AssetServer, structs::MeshType, model::DrawModel};
+use crate::{state::State, assets::AssetServer, structs::MeshType, model::DrawModel, camera::CameraStruct};
 
 pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
     let output = state.window.surface.get_current_texture()?;
@@ -39,7 +39,9 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
             }),
         });
         render_pass.set_pipeline(&state.render_pipeline);
-        render_pass.set_bind_group(1, &state.camera.bind_group, &[]);
+        render_pass.set_bind_group(1, &state.world
+            .get_resource_mut::<CameraStruct>()
+            .unwrap().bind_group, &[]);
         for (_, game_object) in &asset_server.prefab_slab {
             render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
             match &game_object.mesh_type {

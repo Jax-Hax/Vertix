@@ -1,7 +1,7 @@
 use instant::Duration;
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::State, render::render, resources::{WindowEvents, DeltaTime}};
+use crate::{state::State, render::render, resources::{WindowEvents, DeltaTime}, camera::CameraStruct};
 
 pub fn run_event_loop(
     mut state: State,
@@ -18,7 +18,9 @@ pub fn run_event_loop(
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
             } => if state.world.get_resource_mut::<WindowEvents>().unwrap().left_held() || state.mouse_locked {
-                state.camera.camera_controller.process_mouse(delta.0, delta.1)
+                state.world
+                .get_resource_mut::<CameraStruct>()
+                .unwrap().camera_controller.process_mouse(delta.0, delta.1)
             }
             Event::WindowEvent {
                 ref event,
@@ -39,8 +41,11 @@ pub fn run_event_loop(
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::CursorMoved { position, .. } => {
                         let mut mouse_pos = state.world.get_resource_mut::<WindowEvents>().unwrap();
-                        mouse_pos.update_mouse_pos(state.window.normalize_position(position), &mut state.camera.camera_transform);
-                        mouse_pos.calculate_mouse_dir(&state.camera.projection, &state.camera.camera_uniform.view_proj);
+                        let camera = state.world
+                        .get_resource_mut::<CameraStruct>()
+                        .unwrap();
+                        mouse_pos.update_mouse_pos(state.window.normalize_position(position), &mut camera.camera_transform);
+                        mouse_pos.calculate_mouse_dir(&camera.projection, &camera.camera_uniform.view_proj);
                     }
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);
