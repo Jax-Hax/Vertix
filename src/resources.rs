@@ -88,10 +88,6 @@ impl WindowEvents {
         self.mouse_dir_ray = ray_world;
     }
 }
-#[derive(Resource)]
-pub struct DeltaTime {
-    pub dt: instant::Duration,
-}
 pub struct Timer {
     pub time_left: time::Duration,
 }
