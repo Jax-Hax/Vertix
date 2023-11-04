@@ -2,7 +2,7 @@ use bevy_ecs::system::{Query, Res, ResMut};
 use glam::{Quat, Vec3};
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*,
+    prelude::*, assets::AssetServer,
 };
 
 fn main() {
@@ -39,7 +39,8 @@ pub async fn run() {
             instances.push((instance,));
         }
     }
-    state
+    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    asset_server
         .create_model_instances(
             "cube.obj",
             instances.iter_mut().map(|(instance,)| instance).collect(),
@@ -53,7 +54,7 @@ pub async fn run() {
 }
 fn movement(
     mut query: Query<(&mut Instance,)>,
-    mut instance_update: ResMut<UpdateInstance>,
+    mut asset_server: ResMut<AssetServer>,
     delta_time: Res<DeltaTime>,
 ) {
     let mut instances = vec![];
@@ -68,11 +69,11 @@ fn movement(
         }
         temp_instance = *instance;
     }
-    temp_instance.update(instances, &mut instance_update);
+    temp_instance.update(instances, &mut asset_server);
 }
 fn movement_with_key(
     mut query: Query<(&mut Instance,)>,
-    mut instance_update: ResMut<UpdateInstance>,
+    mut instance_update: ResMut<AssetServer>,
     delta_time: Res<DeltaTime>,
     window_events: Res<WindowEvents>,
 ) {

@@ -1,6 +1,6 @@
 use glam::Vec3;
 use noise::{NoiseFn, Perlin};
-use vertix::{prelude::*, model::Material, camera::{Camera, default_3d_cam}};
+use vertix::{prelude::*, camera::{Camera, default_3d_cam}, assets::AssetServer};
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Block {
     block_type: BlockType,
@@ -36,13 +36,15 @@ pub async fn run() {
     let camera = Camera::new(Vec3::new(0.0, 50.0, 10.0), f32::to_radians(90.0), f32::to_radians(-20.0));
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
+    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let atlas_idx = asset_server.compile_material("texture_atlas.png").await;
     //add models
-    create_terrain(&mut state).await;
+    create_terrain(&mut state, atlas_idx);
     //render loop
     run_event_loop(state, event_loop, Some(default_3d_cam));
 }
 
-async fn create_terrain(state: &mut State) {
+fn create_terrain(state: &mut State, atlas_idx: usize) {
     let mut chunk_blocks_vec = vec![];
     //gen chunks
     for i in 0..256 {
@@ -58,7 +60,7 @@ async fn create_terrain(state: &mut State) {
         build_chunk(
             state,
             blocks,
-            state.compile_material("texture_atlas.png").await,
+            atlas_idx,
             row as f32,
             col as f32,
             match i.checked_sub(16) {
@@ -88,8 +90,7 @@ async fn create_terrain(state: &mut State) {
                 }
                 None => None,
             },
-        )
-        .await;
+        );
     }
 }
 fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
@@ -142,10 +143,10 @@ fn flip_2d_vector(input: Vec<Vec<Block>>) -> Vec<Vec<Block>> {
 }
 
 
-pub async fn build_chunk(
+pub fn build_chunk(
     state: &mut State,
     blocks: &Vec<Vec<Vec<Block>>>,
-    material: Material,
+    material_idx: usize,
     x_offset: f32,
     z_offset: f32,
     left_chunk: Option<&Vec<Vec<Vec<Block>>>>,
@@ -298,14 +299,14 @@ pub async fn build_chunk(
             }
         }
     }
-    let container = state
+    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    asset_server
         .build_mesh(
             vertices,
             indices,
             vec![&mut Instance{..Default::default()}], //since we are just discarding the instance afterward and not doing anything to it we don't need to add to world
-            material,false
+            material_idx,false
         );
-        state.world.spawn((container,));
     
 }
 

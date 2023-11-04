@@ -1,5 +1,5 @@
 use glam::{Vec3, Vec2};
-use vertix::{prelude::*, camera::{Camera, default_3d_cam}, primitives::rect};
+use vertix::{prelude::*, camera::{Camera, default_3d_cam}, primitives::rect, assets::AssetServer};
 fn main() {
     pollster::block_on(run());
 }
@@ -12,12 +12,14 @@ pub async fn run() {
     let (vertices, indices) = rect(Vec2::new(0.5,0.5), Vec2::new(-0.5,-0.5));
     let mut instance = Instance {is_world_space: true, ..Default::default()};
     let mut instances = vec![];
+    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
     instances.push(&mut instance);
-    state.build_mesh(
+    let material_idx = asset_server.compile_material("cube-diffuse.jpg").await;
+    asset_server.build_mesh(
         vertices,
         indices,
         instances,
-        state.compile_material("cube-diffuse.jpg").await,
+        material_idx,
         false,
     );
     state.world.spawn((instance,));
