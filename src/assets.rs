@@ -1,10 +1,8 @@
-use bevy_ecs::system::Resource;
 use slab::Slab;
 use wgpu::{Device, Queue, util::DeviceExt, BindGroupLayout};
 
 use crate::{prelude::{Vertex, Instance}, shapes::rect, prefabs::Prefab, structs::{MeshType, SingleMesh}, loader::{load_texture, load_model}, model::Material};
 
-#[derive(Resource)]
 pub struct AssetServer {
     pub material_assets: Vec<Material>,
     pub device: Device,

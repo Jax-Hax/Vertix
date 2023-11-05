@@ -1,10 +1,10 @@
 use crate::{
     assets::AssetServer,
     camera::{Camera, CameraStruct},
-    resources::{DeltaTime, MouseClickType, WindowEvents},
+    resources::{MouseClickType, WindowEvents},
     shader,
     structs::CameraController,
-    texture, window,
+    texture, window, app_resource::App,
 };
 use bevy_ecs::prelude::*;
 use glam::Vec3;
@@ -119,13 +119,12 @@ impl State {
         );
         window.window.set_visible(true);
         let mut world = World::new();
-        world.insert_resource(AssetServer::new(
+        let asset_server = AssetServer::new(
             device,
             queue,
             build_path.to_string(),
             texture_bind_group_layout,
-        ));
-        world.insert_resource(DeltaTime { dt: Duration::ZERO });
+        );
         let mut window_events = WindowEvents {
             keys_pressed: vec![],
             screen_mouse_pos: PhysicalPosition { x: 0.0, y: 0.0 },
@@ -137,9 +136,8 @@ impl State {
             mouse_dir_ray: Vec3::ZERO,
         };
         window_events.calculate_mouse_dir(&camera.projection, &camera.camera_uniform.view_proj);
-        world.insert_resource(window_events);
+        world.insert_resource(App {asset_server, dt: Duration::ZERO,window_events, camera});
         let schedule = Schedule::default();
-        world.insert_resource(camera);
         (
             Self {
                 config,
@@ -159,19 +157,18 @@ impl State {
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
-            self.world
-                .get_resource_mut::<CameraStruct>()
-                .unwrap()
+            let mut app = self.world
+                .get_resource_mut::<App>()
+                .unwrap();
+            app.camera
                 .projection
                 .resize(new_size.width, new_size.height);
-            self.world
-                .get_resource_mut::<WindowEvents>()
-                .unwrap()
+            app.window_events
                 .update_aspect_ratio(new_size.width, new_size.height);
             self.window.size = new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
-            let device = &self.world.get_resource_mut::<AssetServer>().unwrap().device;
+            let device = &app.asset_server.device;
             self.window.surface.configure(device, &self.config);
             self.depth_texture =
                 texture::Texture::create_depth_texture(&device, &self.config, "depth_texture");
@@ -189,23 +186,26 @@ impl State {
                 ..
             } => {
                 let key_pressed = (*key, *state);
-                self.world
-                    .get_resource_mut::<WindowEvents>()
-                    .unwrap()
+                let mut app = self.world
+                    .get_resource_mut::<App>()
+                    .unwrap();
+                app.window_events
                     .keys_pressed
                     .push(key_pressed);
-                self.world
-                .get_resource_mut::<CameraStruct>()
-                .unwrap().camera_controller.process_keyboard(*key, *state)
+                app.camera.camera_controller.process_keyboard(*key, *state)
             }
             WindowEvent::MouseWheel { delta, .. } => {
-                self.world
-                .get_resource_mut::<CameraStruct>()
-                .unwrap().camera_controller.process_scroll(delta);
+                let mut app = self.world
+                    .get_resource_mut::<App>()
+                    .unwrap();
+                app.camera.camera_controller.process_scroll(delta);
                 true
             }
             WindowEvent::MouseInput { button, state, .. } => {
-                let mut events = self.world.get_resource_mut::<WindowEvents>().unwrap();
+                let mut app = self.world
+                    .get_resource_mut::<App>()
+                    .unwrap();
+                let mut events = app.window_events;
                 match button {
                     MouseButton::Left => {
                         events.left_mouse = if *state == ElementState::Pressed {
@@ -236,17 +236,16 @@ impl State {
         }
     }
     pub fn update(&mut self) {
-        let mut camera = self.world
-        .get_resource_mut::<CameraStruct>()
-        .unwrap();
-        camera
+        let mut app = self.world
+                    .get_resource_mut::<App>()
+                    .unwrap();
+        app.camera
             .camera_uniform
-            .update_view_proj(&camera.camera_transform, &camera.projection);
-        let queue = self.world.get_resource_mut::<AssetServer>().unwrap();
-        queue.queue.write_buffer(
-            &camera.buffer,
+            .update_view_proj(&app.camera.camera_transform, &app.camera.projection);
+        app.asset_server.queue.write_buffer(
+            &app.camera.buffer,
             0,
-            bytemuck::cast_slice(&[camera.camera_uniform]),
+            bytemuck::cast_slice(&[app.camera.camera_uniform]),
         );
     }
 }

@@ -39,7 +39,6 @@ impl CameraUniform {
         self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).to_cols_array_2d();
     }
 }
-#[derive(Resource)]
 pub struct CameraStruct{
     pub projection: Projection,
     pub camera_uniform: CameraUniform,

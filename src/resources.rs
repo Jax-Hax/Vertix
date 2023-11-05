@@ -3,7 +3,6 @@ use glam::{Vec4, Vec3, Mat4};
 use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 
 use crate::camera::{Camera, Projection};
-#[derive(Resource)]
 pub struct WindowEvents {
     pub keys_pressed: Vec<(VirtualKeyCode, ElementState)>,
     pub screen_mouse_pos: PhysicalPosition<f32>,
