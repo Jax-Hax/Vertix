@@ -87,6 +87,11 @@ impl CameraStruct{
         });
         Self {projection,camera_uniform, buffer, bind_group_layout, bind_group, camera_transform: camera, camera_controller }
     }
+    pub fn update_view_proj(&mut self){
+        self
+            .camera_uniform
+            .update_view_proj(&self.camera_transform, &self.projection);
+    }
 }
 
 

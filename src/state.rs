@@ -239,11 +239,7 @@ impl State {
         let mut app = self.world
                     .get_resource_mut::<App>()
                     .unwrap();
-        let proj = &app.camera.projection;
-        let transform = &app.camera.camera_transform;
-        app.camera
-            .camera_uniform
-            .update_view_proj(transform, proj);
+        app.camera.update_view_proj();
         app.asset_server.queue.write_buffer(
             &app.camera.buffer,
             0,

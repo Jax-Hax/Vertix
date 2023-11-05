@@ -43,8 +43,7 @@ pub fn run_event_loop(
                         let mut app = state.world
                     .get_resource_mut::<App>()
                     .unwrap();
-                        app.window_events.update_mouse_pos(state.window.normalize_position(position), &mut app.camera.camera_transform);
-                        app.window_events.calculate_mouse_dir(&app.camera.projection, &app.camera.camera_uniform.view_proj);
+                        app.cursor_move(state.window.normalize_position(position));
                     }
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);
