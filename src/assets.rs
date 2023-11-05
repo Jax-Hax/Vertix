@@ -1,7 +1,7 @@
 use slab::Slab;
 use wgpu::{Device, Queue, util::DeviceExt, BindGroupLayout};
 
-use crate::{prelude::{Vertex, Instance}, shapes::rect, prefabs::Prefab, structs::{MeshType, SingleMesh}, loader::{load_texture, load_model}, model::Material};
+use crate::{prelude::{Vertex, Instance}, shapes::rect, prefabs::Prefab, structs::{MeshType, Mesh}, loader::{load_texture, load_model}, model::Material};
 
 pub struct AssetServer {
     pub material_assets: Vec<Material>,
@@ -9,17 +9,38 @@ pub struct AssetServer {
     pub queue: Queue,
     pub prefab_slab: Slab<Prefab>,
     pub build_path: String,
-    pub texture_bind_group_layout: BindGroupLayout
+    pub texture_bind_group_layout: BindGroupLayout,
+    pub sprite_mesh: Mesh,
 }
 impl AssetServer {
     pub fn new(device: Device, queue: Queue, build_path: String, texture_bind_group_layout: BindGroupLayout) -> Self {
+        //make sprite mesh
+        let (vertices, indices) = rect(1.,1.);
+        let vertex_buffer = device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(&vertices),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let index_buffer = device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(&indices),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+            
+        let mesh = Mesh {
+            vertex_buffer,index_buffer, num_elements: indices.len() as u32,
+            material_idx: 0,
+        };
         Self {
             material_assets: vec![],
             device,
             queue,
             prefab_slab: Slab::new(),
             build_path,
-            texture_bind_group_layout
+            texture_bind_group_layout,
+            sprite_mesh: mesh
         }
     }
     pub fn remove_prefab(&mut self, prefab_idx: usize) {
@@ -84,7 +105,7 @@ impl AssetServer {
                 contents: bytemuck::cast_slice(&indices),
                 usage: wgpu::BufferUsages::INDEX,
             });
-        let mesh = SingleMesh {
+        let mesh = Mesh {
             vertex_buffer,
             index_buffer,
             num_elements: indices.len() as u32,
@@ -112,7 +133,7 @@ impl AssetServer {
             });
         let container = Prefab::new(
             instance_buffer,
-            MeshType::SingleMesh(mesh),
+            MeshType::Mesh(mesh),
             length,
         );
         let entry = self.prefab_slab.vacant_entry();
@@ -175,25 +196,6 @@ impl AssetServer {
         material_idx: usize,
         is_updating: bool
     ) {
-        //make sprite mesh
-        let (vertices, indices) = rect(1.,1.);
-        let vertex_buffer = self.device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(&vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-        let index_buffer = self.device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(&indices),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-            
-        let mesh = SingleMesh {
-            vertex_buffer,index_buffer, num_elements: indices.len() as u32,
-            material_idx,
-        };
         let mut instance_data = vec![];
         let mut length = 0;
         for instance in &instances {
@@ -216,7 +218,7 @@ impl AssetServer {
             });
         let container = Prefab::new(
             instance_buffer,
-            MeshType::SingleMesh(mesh),
+            MeshType::Sprite(material_idx),
             length,
         );
         let entry = self.prefab_slab.vacant_entry();

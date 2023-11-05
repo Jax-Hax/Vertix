@@ -7,9 +7,10 @@ use winit::{
 };
 pub enum MeshType {
     Model(Model),
-    SingleMesh(SingleMesh),
+    Mesh(Mesh),
+    Sprite(usize) //material idx
 }
-pub struct SingleMesh {
+pub struct Mesh {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub num_elements: u32,

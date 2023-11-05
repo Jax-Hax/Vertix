@@ -48,13 +48,21 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
                 MeshType::Model(model) => {
                     render_pass.draw_model_instanced(&model, 0..game_object.length);
                 }
-                MeshType::SingleMesh(mesh) => {
+                MeshType::Mesh(mesh) => {
                     render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
                     render_pass
                         .set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
                     let material = &app.asset_server.material_assets[mesh.material_idx];
                     render_pass.set_bind_group(0, &material.bind_group, &[]);
                     render_pass.draw_indexed(0..mesh.num_elements, 0, 0..game_object.length);
+                }
+                MeshType::Sprite(material_idx) => {
+                    render_pass.set_vertex_buffer(0, app.asset_server.sprite_mesh.vertex_buffer.slice(..));
+                    render_pass
+                        .set_index_buffer(app.asset_server.sprite_mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+                    let material = &app.asset_server.material_assets[*material_idx];
+                    render_pass.set_bind_group(0, &material.bind_group, &[]);
+                    render_pass.draw_indexed(0..app.asset_server.sprite_mesh.num_elements, 0, 0..game_object.length);
                 }
             }
         }
