@@ -12,17 +12,16 @@ pub fn run_event_loop(
     
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
-        let mut app = state.world
-                    .get_resource_mut::<App>()
-                    .unwrap();
         match event {
             Event::MainEventsCleared => state.window().request_redraw(),
             Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
-            } => if app.window_events.left_held() || state.mouse_locked {
+            } => {let mut app = state.world
+                .get_resource_mut::<App>()
+                .unwrap();if app.window_events.left_held() || state.mouse_locked {
                 app.camera.camera_controller.process_mouse(delta.0, delta.1)
-            }
+            }}
             Event::WindowEvent {
                 ref event,
                 window_id,
@@ -41,6 +40,9 @@ pub fn run_event_loop(
                         ..
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::CursorMoved { position, .. } => {
+                        let mut app = state.world
+                    .get_resource_mut::<App>()
+                    .unwrap();
                         app.window_events.update_mouse_pos(state.window.normalize_position(position), &mut app.camera.camera_transform);
                         app.window_events.calculate_mouse_dir(&app.camera.projection, &app.camera.camera_uniform.view_proj);
                     }
@@ -57,13 +59,17 @@ pub fn run_event_loop(
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                app.dt = dt;
+                state.world
+                    .get_resource_mut::<App>()
+                    .unwrap().dt = dt;
                 if cam_update.is_some() {
                     cam_update.unwrap()(&mut state, dt);
                 }
                 state.update();
                 state.schedule.run(&mut state.world);
-                app.window_events.next_frame();
+                state.world
+                    .get_resource_mut::<App>()
+                    .unwrap().window_events.next_frame();
                 match render(&mut state) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
