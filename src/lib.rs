@@ -8,13 +8,17 @@ pub mod texture;
 pub mod window;
 pub mod prefabs;
 pub mod shapes;
-pub mod collision;
 pub mod event;
 pub mod resources;
 pub mod instance;
 pub mod assets;
 pub mod app_resource;
 mod render;
+mod collision {
+    pub mod structs_3d;
+    pub mod structs_2d;
+    pub mod collision_fns_3d;
+}
 pub mod prelude {
     pub use crate::{
         instance::{Instance,InstanceRaw},

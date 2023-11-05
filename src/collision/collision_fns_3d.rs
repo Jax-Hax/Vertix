@@ -1,95 +1,3 @@
-use glam::{Vec2, Vec3};
-use winit::dpi::PhysicalPosition;
-
-use bevy_ecs::prelude::*;
-
-use crate::{prelude::Instance, resources::WindowEvents};
-#[derive(Component)]
-pub struct Box2D {
-    x_max: f32,
-    x_min: f32,
-    y_max: f32,
-    y_min: f32,
-    enabled: bool,
-}
-impl Box2D {
-    pub fn new(p1: Vec2, p2: Vec2) -> Self {
-        Box2D {
-            x_max: if p1.x > p2.x { p1.x } else { p2.x },
-            x_min: if p1.x < p2.x { p1.x } else { p2.x },
-            y_max: if p1.y > p2.y { p1.y } else { p2.y },
-            y_min: if p1.y < p2.y { p1.y } else { p2.y },
-            enabled: true,
-        }
-    }
-    pub fn check_collision(&self, instance: &Instance, window_events: &WindowEvents) -> bool {
-        let x = window_events.screen_mouse_pos.x + instance.position.x;
-        let y =
-            (window_events.screen_mouse_pos.y + instance.position.y) / window_events.aspect_ratio;
-        if self.enabled {
-            if x < self.x_max && x > self.x_min && y < self.y_max && y > self.y_min {
-                return true;
-            }
-        }
-        return false;
-    }
-}
-#[derive(Component)]
-pub struct Circle {
-    center_x: f32,
-    center_y: f32,
-    radius: f32,
-    enabled: bool,
-}
-impl Circle {
-    pub fn new(center: Vec2, radius: f32, enabled: bool) -> Self {
-        Circle {
-            center_x: center.x,
-            center_y: center.y,
-            radius,
-            enabled,
-        }
-    }
-    pub fn check_collision(&self, pos: &PhysicalPosition<f32>) -> bool {
-        let x = pos.x;
-        let y = pos.y;
-        //find distance betweenn two points
-        let dist_x = (x - self.center_x).powi(2);
-        let dist_y = (y - self.center_y).powi(2);
-        let dist = (dist_x + dist_y).sqrt();
-        if self.enabled && dist < self.radius {
-            return true;
-        }
-        return false;
-    }
-}
-#[derive(Component,Resource)]
-pub struct OrientedBoundingBox {
-    pub aabb_min: Vec3,
-    pub aabb_max: Vec3,
-}
-impl OrientedBoundingBox {
-    pub fn new(x_len: f32, y_len: f32, z_len: f32) -> Self {
-        let x = x_len/2.;
-        let y = y_len/2.;
-        let z = z_len/2.;   
-        Self {
-            aabb_min: Vec3::new(-x,-y,-z),
-            aabb_max: Vec3::new(x,y,z),
-        }
-    }
-    pub fn check_collision_with_ray(&self, ray_origin: Vec3, ray_direction: Vec3, instance: &Instance) -> (bool,f32) {
-        if !instance.enabled {
-            return (false,0.0);
-        }
-        let model_matrix = instance.to_raw().unwrap().model;
-        if sphere_with_ray_collision(ray_origin, ray_direction, 2., Vec3::new(0., 0., 0.)){
-            return (true,-1.)
-        }
-        (false,0.)
-        //oriented_bounding_box_with_ray(ray_origin, ray_direction, self.aabb_min, self.aabb_max, model_matrix)
-    }
-}
 pub fn oriented_bounding_box_with_ray(
     ray_origin: Vec3,    // Ray origin, in world space
     ray_direction: Vec3, // Ray direction (NOT target position!), in world space. Must be normalize()'d.
@@ -168,7 +76,6 @@ pub fn oriented_bounding_box_with_ray(
     (true,t_min)
 }
 pub fn sphere_with_ray_collision(ray_origin: Vec3, ray_direction: Vec3, sphere_radius: f32, sphere_center: Vec3) -> bool {
-
     let delta = ray_origin - sphere_center;
     let b = delta.dot(ray_direction);
     let c = delta.dot(delta) - sphere_radius*sphere_radius;
