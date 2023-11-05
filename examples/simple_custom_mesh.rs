@@ -1,5 +1,5 @@
 use glam::Vec3;
-use vertix::{prelude::*, camera::{Camera, default_3d_cam}, shapes::rect, assets::AssetServer};
+use vertix::{prelude::*, camera::{Camera, default_3d_cam}, shapes::rect, app_resource::App};
 fn main() {
     pollster::block_on(run());
 }
@@ -11,7 +11,7 @@ pub async fn run() {
     //custom mesh
     let mut instance = Instance {is_world_space: true, ..Default::default()};
     let mut instances = vec![];
-    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
     instances.push(&mut instance);
     let material_idx = asset_server.compile_material("cube-diffuse.jpg").await;
     asset_server.build_mesh(

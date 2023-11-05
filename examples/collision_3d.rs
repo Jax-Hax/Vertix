@@ -2,7 +2,7 @@ use bevy_ecs::system::{Query, Res, ResMut};
 use glam::Vec3;
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*, assets::AssetServer, collision::OrientedBoundingBox,
+    prelude::*, collision::OrientedBoundingBox, app_resource::App,
 };
 
 fn main() {
@@ -22,7 +22,7 @@ pub async fn run() {
                 ..Default::default()
             };
     let obb = OrientedBoundingBox::new(2.,2.,2.);
-    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
     asset_server
         .create_model_instances(
             "cube.obj",
@@ -37,9 +37,7 @@ pub async fn run() {
 }
 fn movement(
     mut query: Query<(&mut Instance,)>,
-    mut asset_server: ResMut<AssetServer>,
-    delta_time: Res<DeltaTime>,
-    window_events: Res<WindowEvents>,
+    mut app: ResMut<App>,
     obb: Res<OrientedBoundingBox>
 ) {
     let mut instances = vec![];
@@ -47,13 +45,13 @@ fn movement(
         ..Default::default()
     };
     for (mut instance,) in &mut query {
-        instance.position[0] += 10. * delta_time_to_seconds(delta_time.dt);
+        instance.position[0] += 10. * delta_time_to_seconds(app.dt);
         let instance_raw = instance.to_raw();
         if instance_raw.is_some() {
             instances.push(instance_raw.unwrap());
         }
         temp_instance = *instance;
     }
-    obb.check_collision_with_ray(ray_origin, window_events.mouse_dir_ray, &temp_instance);
-    temp_instance.update(instances, &mut asset_server);
+    obb.check_collision_with_ray(ray_origin, app.window_events.mouse_dir_ray, &temp_instance);
+    temp_instance.update(instances, &mut app.asset_server);
 }

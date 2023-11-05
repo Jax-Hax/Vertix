@@ -1,6 +1,6 @@
 use glam::Vec3;
 use wgpu::util::DeviceExt;
-use vertix::{prelude::*, assets::AssetServer};
+use vertix::{prelude::*, app_resource::App};
 pub async fn compute_shader(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
@@ -127,7 +127,7 @@ pub async fn run() {
     let camera = Camera::new(Vec3::new(0.0, 5.0, 10.0), f32::to_radians(-90.0), f32::to_radians(-20.0));
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, _event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
-    let asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let asset_server = &state.world.get_resource_mut::<App>().unwrap().asset_server;
     let steps = compute_shader(&asset_server.device, &asset_server.queue, &[1, 2, 3, 4]).await.unwrap();
     for num in steps{
         println!("{},", num);

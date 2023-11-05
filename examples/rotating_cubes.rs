@@ -1,8 +1,8 @@
-use bevy_ecs::system::{Query, Res, ResMut};
+use bevy_ecs::system::{Query, ResMut};
 use glam::{Quat, Vec3};
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*, assets::AssetServer,
+    prelude::*, app_resource::App,
 };
 
 fn main() {
@@ -39,7 +39,7 @@ pub async fn run() {
             instances.push((instance,));
         }
     }
-    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
     asset_server
         .create_model_instances(
             "cube.obj",
@@ -54,42 +54,39 @@ pub async fn run() {
 }
 fn movement(
     mut query: Query<(&mut Instance,)>,
-    mut asset_server: ResMut<AssetServer>,
-    delta_time: Res<DeltaTime>,
+    mut app: ResMut<App>,
 ) {
     let mut instances = vec![];
     let mut temp_instance = Instance {
         ..Default::default()
     };
     for (mut instance,) in &mut query {
-        instance.position[0] += 10. * delta_time_to_seconds(delta_time.dt);
+        instance.position[0] += 10. * delta_time_to_seconds(app.dt);
         let instance_raw = instance.to_raw();
         if instance_raw.is_some() {
             instances.push(instance_raw.unwrap());
         }
         temp_instance = *instance;
     }
-    temp_instance.update(instances, &mut asset_server);
+    temp_instance.update(instances, &mut app.asset_server);
 }
 fn movement_with_key(
     mut query: Query<(&mut Instance,)>,
-    mut instance_update: ResMut<AssetServer>,
-    delta_time: Res<DeltaTime>,
-    window_events: Res<WindowEvents>,
+    mut app: ResMut<App>
 ) {
-    if window_events.is_key_pressed(VirtualKeyCode::D, None) {
+    if app.window_events.is_key_pressed(VirtualKeyCode::D, None) {
         let mut instances = vec![];
         let mut temp_instance = Instance {
             ..Default::default()
         };
         for (mut instance,) in &mut query {
-            instance.position[1] += 50. * delta_time_to_seconds(delta_time.dt);
+            instance.position[1] += 50. * delta_time_to_seconds(app.dt);
             let instance_raw = instance.to_raw();
             if instance_raw.is_some() {
                 instances.push(instance_raw.unwrap());
             }
             temp_instance = *instance;
         }
-        temp_instance.update(instances, &mut instance_update);
+        temp_instance.update(instances, &mut app.asset_server);
     }
 }

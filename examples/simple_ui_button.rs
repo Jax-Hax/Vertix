@@ -3,7 +3,7 @@ use vertix::{
     camera::{default_3d_cam, Camera},
     collision::Box2D,
     prelude::*,
-    shapes::rect, assets::AssetServer,
+    shapes::rect, app_resource::App,
 };
 use bevy_ecs::prelude::*;
 fn main() {
@@ -25,7 +25,7 @@ pub async fn run() {
     let mut instance = Instance {is_world_space: false, ..Default::default()};
     let mut instances = vec![];
     instances.push(&mut instance);
-    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
     let material_idx = asset_server.compile_material("rounded_rect.png").await;
     asset_server.build_mesh(
         rect(1.,1.),
@@ -38,11 +38,11 @@ pub async fn run() {
     //render loop
     run_event_loop(state, event_loop, Some(default_3d_cam));
 }
-fn movement(query: Query<(&Instance, &Box2D)>, window_events: Res<WindowEvents>) {
+fn movement(query: Query<(&Instance, &Box2D)>, app: Res<App>) {
     for (instance, collider) in &query {
-        if collider.check_collision(instance, &window_events) {
+        if collider.check_collision(instance, &app.window_events) {
             //println!("collision");
-            if window_events.left_clicked() {
+            if app.window_events.left_clicked() {
                 println!("click")
             }
         }

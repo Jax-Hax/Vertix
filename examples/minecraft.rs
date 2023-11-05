@@ -1,6 +1,6 @@
 use glam::Vec3;
 use noise::{NoiseFn, Perlin};
-use vertix::{prelude::*, camera::{Camera, default_3d_cam}, assets::AssetServer};
+use vertix::{prelude::*, camera::{Camera, default_3d_cam}, app_resource::App};
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Block {
     block_type: BlockType,
@@ -36,7 +36,7 @@ pub async fn run() {
     let camera = Camera::new(Vec3::new(0.0, 50.0, 10.0), f32::to_radians(90.0), f32::to_radians(-20.0));
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
-    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
     let atlas_idx = asset_server.compile_material("texture_atlas.png").await;
     //add models
     create_terrain(&mut state, atlas_idx);
@@ -299,7 +299,7 @@ pub fn build_chunk(
             }
         }
     }
-    let mut asset_server = state.world.get_resource_mut::<AssetServer>().unwrap();
+    let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
     asset_server
         .build_mesh(
             (vertices,
