@@ -1,9 +1,9 @@
-use bevy_ecs::system::Resource;
 use glam::{Mat4, Vec3};
 use instant::Duration;
 use wgpu::util::DeviceExt;
 use wgpu::{Device, SurfaceConfiguration, Buffer, BindGroupLayout, BindGroup};
 
+use crate::app_resource::App;
 use crate::structs::CameraController;
 use crate::state::State;
 use std::f32::consts::FRAC_PI_2;
@@ -150,9 +150,9 @@ impl Projection {
 
 pub fn default_3d_cam(state: &mut State, dt: Duration) {
     let dt = dt.as_secs_f32();
-    let mut cam = state.world
-                .get_resource_mut::<CameraStruct>()
-                .unwrap();
+    let mut cam = &mut state.world
+                .get_resource_mut::<App>()
+                .unwrap().camera;
     // Move forward/backward and left/right
     let (yaw_sin, yaw_cos) = cam.camera_transform.yaw.sin_cos();
     let forward = Vec3::new(yaw_cos, 0.0, yaw_sin).normalize();

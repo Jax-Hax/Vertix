@@ -205,7 +205,7 @@ impl State {
                 let mut app = self.world
                     .get_resource_mut::<App>()
                     .unwrap();
-                let mut events = app.window_events;
+                let mut events = &mut app.window_events;
                 match button {
                     MouseButton::Left => {
                         events.left_mouse = if *state == ElementState::Pressed {
@@ -239,9 +239,11 @@ impl State {
         let mut app = self.world
                     .get_resource_mut::<App>()
                     .unwrap();
+        let proj = &app.camera.projection;
+        let transform = &app.camera.camera_transform;
         app.camera
             .camera_uniform
-            .update_view_proj(&app.camera.camera_transform, &app.camera.projection);
+            .update_view_proj(transform, proj);
         app.asset_server.queue.write_buffer(
             &app.camera.buffer,
             0,

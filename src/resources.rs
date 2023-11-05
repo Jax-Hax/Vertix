@@ -1,4 +1,3 @@
-use bevy_ecs::system::Resource;
 use glam::{Vec4, Vec3, Mat4};
 use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 

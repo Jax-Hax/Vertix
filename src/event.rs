@@ -1,7 +1,7 @@
 use instant::Duration;
 use winit::{event_loop::{EventLoop, ControlFlow}, event::{Event, DeviceEvent, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
 
-use crate::{state::State, render::render, resources::WindowEvents, camera::CameraStruct};
+use crate::{state::State, render::render, app_resource::App};
 
 pub fn run_event_loop(
     mut state: State,
@@ -12,15 +12,16 @@ pub fn run_event_loop(
     
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
+        let mut app = state.world
+                    .get_resource_mut::<App>()
+                    .unwrap();
         match event {
             Event::MainEventsCleared => state.window().request_redraw(),
             Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
-            } => if state.world.get_resource_mut::<WindowEvents>().unwrap().left_held() || state.mouse_locked {
-                state.world
-                .get_resource_mut::<CameraStruct>()
-                .unwrap().camera_controller.process_mouse(delta.0, delta.1)
+            } => if app.window_events.left_held() || state.mouse_locked {
+                app.camera.camera_controller.process_mouse(delta.0, delta.1)
             }
             Event::WindowEvent {
                 ref event,
@@ -40,12 +41,8 @@ pub fn run_event_loop(
                         ..
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::CursorMoved { position, .. } => {
-                        let mut mouse_pos = state.world.get_resource_mut::<WindowEvents>().unwrap();
-                        let camera = state.world
-                        .get_resource_mut::<CameraStruct>()
-                        .unwrap();
-                        mouse_pos.update_mouse_pos(state.window.normalize_position(position), &mut camera.camera_transform);
-                        mouse_pos.calculate_mouse_dir(&camera.projection, &camera.camera_uniform.view_proj);
+                        app.window_events.update_mouse_pos(state.window.normalize_position(position), &mut app.camera.camera_transform);
+                        app.window_events.calculate_mouse_dir(&app.camera.projection, &app.camera.camera_uniform.view_proj);
                     }
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);
@@ -60,14 +57,13 @@ pub fn run_event_loop(
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                let mut delta_time = state.world.get_resource_mut::<DeltaTime>().unwrap();
-                delta_time.dt = dt;
+                app.dt = dt;
                 if cam_update.is_some() {
                     cam_update.unwrap()(&mut state, dt);
                 }
                 state.update();
                 state.schedule.run(&mut state.world);
-                state.world.get_resource_mut::<WindowEvents>().unwrap().next_frame();
+                app.window_events.next_frame();
                 match render(&mut state) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated

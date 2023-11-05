@@ -1,13 +1,15 @@
 use std::iter;
-use crate::{state::State, assets::AssetServer, structs::MeshType, model::DrawModel, camera::CameraStruct};
+use crate::{state::State, structs::MeshType, model::DrawModel, app_resource::App};
 
 pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
     let output = state.window.surface.get_current_texture()?;
     let view = output
         .texture
         .create_view(&wgpu::TextureViewDescriptor::default());
-    let asset_server = state.world.get_resource::<AssetServer>().unwrap();
-    let mut encoder = asset_server
+    let app = state.world
+    .get_resource::<App>()
+    .unwrap();
+    let mut encoder = app.asset_server
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Render Encoder"),
@@ -39,10 +41,8 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
             }),
         });
         render_pass.set_pipeline(&state.render_pipeline);
-        render_pass.set_bind_group(1, &state.world
-            .get_resource_mut::<CameraStruct>()
-            .unwrap().bind_group, &[]);
-        for (_, game_object) in &asset_server.prefab_slab {
+        render_pass.set_bind_group(1, &app.camera.bind_group, &[]);
+        for (_, game_object) in &app.asset_server.prefab_slab {
             render_pass.set_vertex_buffer(1, game_object.buffer.slice(..));
             match &game_object.mesh_type {
                 MeshType::Model(model) => {
@@ -52,7 +52,7 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
                     render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
                     render_pass
                         .set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-                    let material = &asset_server.material_assets[mesh.material_idx];
+                    let material = &app.asset_server.material_assets[mesh.material_idx];
                     render_pass.set_bind_group(0, &material.bind_group, &[]);
                     render_pass.draw_indexed(0..mesh.num_elements, 0, 0..game_object.length);
                 }
@@ -60,7 +60,7 @@ pub fn render(state: &mut State) -> Result<(), wgpu::SurfaceError> {
         }
     }
 
-    asset_server.queue.submit(iter::once(encoder.finish()));
+    app.asset_server.queue.submit(iter::once(encoder.finish()));
     output.present();
 
     Ok(())
