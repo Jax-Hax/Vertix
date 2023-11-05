@@ -1,3 +1,9 @@
+use bevy_ecs::component::Component;
+use glam::Vec2;
+use winit::dpi::PhysicalPosition;
+
+use crate::{resources::WindowEvents, prelude::Instance};
+
 #[derive(Component)]
 pub struct Box2D {
     x_max: f32,

@@ -2,7 +2,7 @@ use bevy_ecs::system::{Query, ResMut};
 use glam::Vec3;
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*, collision::OrientedBoundingBox, app_resource::App,
+    prelude::*, app_resource::App, collision::structs_3d::OrientedBoundingBox,
 };
 
 fn main() {

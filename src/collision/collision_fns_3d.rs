@@ -1,3 +1,5 @@
+use glam::Vec3;
+
 pub fn oriented_bounding_box_with_ray(
     ray_origin: Vec3,    // Ray origin, in world space
     ray_direction: Vec3, // Ray direction (NOT target position!), in world space. Must be normalize()'d.

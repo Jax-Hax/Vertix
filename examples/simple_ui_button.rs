@@ -1,8 +1,8 @@
 use glam::{Vec2, Vec3};
 use vertix::{
     camera::{default_3d_cam, Camera},
-    collision::Box2D,
     prelude::*,
+    collision::structs_2d::Box2D,
     shapes::rect, app_resource::App,
 };
 use bevy_ecs::prelude::*;

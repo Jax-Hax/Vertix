@@ -14,7 +14,7 @@ pub mod instance;
 pub mod assets;
 pub mod app_resource;
 mod render;
-mod collision {
+pub mod collision {
     pub mod structs_3d;
     pub mod structs_2d;
     pub mod collision_fns_3d;

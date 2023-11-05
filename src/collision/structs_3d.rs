@@ -3,6 +3,8 @@ use glam::Vec3;
 
 use crate::prelude::Instance;
 
+use super::collision_fns_3d::sphere_with_ray_collision;
+
 #[derive(Component,Resource)]
 pub struct OrientedBoundingBox {
     pub aabb_min: Vec3,
