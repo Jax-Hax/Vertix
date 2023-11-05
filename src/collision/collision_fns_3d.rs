@@ -79,9 +79,11 @@ pub fn oriented_bounding_box_with_ray(
 }
 pub fn sphere_with_ray_collision(ray_origin: Vec3, ray_direction: Vec3, sphere_radius: f32, sphere_center: Vec3) -> bool {
     let delta = ray_origin - sphere_center;
+    
     let b = delta.dot(ray_direction);
     let c = delta.dot(delta) - sphere_radius*sphere_radius;
     let h = b*b - c;
+    println!("h: {:#?}", h);
     if h<0.0 {return false;} // no intersection
     true
 }

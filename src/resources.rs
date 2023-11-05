@@ -1,4 +1,4 @@
-use glam::{Vec4, Vec3, Mat4};
+use glam::{Vec4, Vec3, Mat4, vec3};
 use winit::{dpi::PhysicalPosition, event::{VirtualKeyCode, ElementState}};
 
 use crate::camera::{Camera, Projection};
@@ -77,13 +77,16 @@ impl WindowEvents {
         self.aspect_ratio = (width as f32) /(height as f32);
     }
     pub fn calculate_mouse_dir(&mut self, proj_matrix: &Projection, view_matrix: &[[f32; 4]; 4]) {
-        let ray_clip = Vec4::new(self.screen_mouse_pos.x, self.screen_mouse_pos.y, -1.0, 1.0); //screen mosue pos is (-1,-1) to (1,1)
-        let mut ray_eye = proj_matrix.calc_matrix().inverse() * ray_clip;
-        ray_eye = Vec4::new(ray_eye.x, ray_eye.y, -1.0, 0.0);
+        let ray_clip_start = Vec4::new(self.screen_mouse_pos.x, self.screen_mouse_pos.y, -1.0, 1.0); //screen mosue pos is (-1,-1) to (1,1)
+        let ray_clip_end = Vec4::new(self.screen_mouse_pos.x, self.screen_mouse_pos.y, 0.0, 1.0); //screen mosue pos is (-1,-1) to (1,1)
         let view_mat = Mat4::from_cols_array_2d(&view_matrix);
-        let ray_wor = view_mat.inverse() * ray_eye;
-        let ray_world = Vec3::new(ray_wor.x,ray_wor.y,ray_wor.z).normalize();
-        self.mouse_dir_ray = ray_world;
+        let inversed_view_and_proj_m = (proj_matrix.calc_matrix() * view_mat).inverse();
+        let mut ray_wor_start = inversed_view_and_proj_m * ray_clip_start;
+        ray_wor_start /= ray_wor_start.w;
+        let mut ray_wor_end = inversed_view_and_proj_m * ray_clip_end;
+        ray_wor_end /= ray_wor_end.w;
+        let ray_dir_world = (ray_wor_end - ray_wor_start).normalize();
+        self.mouse_dir_ray = vec3(ray_dir_world.x, ray_dir_world.y, ray_dir_world.z);
     }
 }
 pub struct Timer {
