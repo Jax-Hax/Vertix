@@ -1,4 +1,4 @@
-use bevy_ecs::system::{Query, Res, ResMut};
+use bevy_ecs::system::{Query, ResMut};
 use glam::Vec3;
 use vertix::{
     camera::{default_3d_cam, Camera},
@@ -36,22 +36,27 @@ pub async fn run() {
     run_event_loop(state, event_loop, Some(default_3d_cam));
 }
 fn movement(
-    mut query: Query<(&mut Instance,)>,
+    mut query: Query<(&mut Instance,&mut OrientedBoundingBox)>,
     mut app: ResMut<App>,
-    obb: Res<OrientedBoundingBox>
 ) {
     let mut instances = vec![];
     let mut temp_instance = Instance {
         ..Default::default()
     };
-    for (mut instance,) in &mut query {
-        instance.position[0] += 10. * delta_time_to_seconds(app.dt);
+    for (instance,obb) in &mut query {
         let instance_raw = instance.to_raw();
         if instance_raw.is_some() {
+            let is_collided = obb.check_collision_with_ray(app.camera.camera_transform.position, app.window_events.mouse_dir_ray, &temp_instance);
+            if is_collided {
+                println!("trueee");
+            }
+            else {
+                println!("not truee");
+            }
             instances.push(instance_raw.unwrap());
         }
         temp_instance = *instance;
     }
-    obb.check_collision_with_ray(ray_origin, app.window_events.mouse_dir_ray, &temp_instance);
+    
     temp_instance.update(instances, &mut app.asset_server);
 }
