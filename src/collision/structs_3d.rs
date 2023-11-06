@@ -5,6 +5,7 @@ use crate::prelude::Instance;
 
 use super::collision_fns_3d::{oriented_bounding_box_with_ray, sphere_with_ray_collision};
 
+#[derive(Component, Resource)]
 pub enum Collider3D {
     OBB(OBB),
     Sphere(Sphere),
@@ -13,9 +14,9 @@ pub enum Collider3D {
 impl Collider3D {
     pub fn check_collision(
         &self,
-        parent_instance: Option<Instance>,
+        parent_instance: Option<&Instance>,
         other: &Self,
-        other_instance: Option<Instance>,
+        other_instance: Option<&Instance>,
     ) -> ColliderResult {
         match self {
             Collider3D::OBB(obb) => match other {
@@ -95,11 +96,12 @@ pub enum ColliderResult {
     NoCollision,
     Collision(f32),
 }
+#[derive(Copy, Clone)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
 }
-#[derive(Component, Resource)]
+#[derive(Copy, Clone)]
 pub struct OBB {
     pub aabb_min: Vec3,
     pub aabb_max: Vec3,
@@ -128,7 +130,7 @@ impl OBB {
         )
     }
 }
-#[derive(Component, Resource)]
+#[derive(Copy, Clone)]
 pub struct Ray {
     pub origin: Vec3,
     pub direction: Vec3,

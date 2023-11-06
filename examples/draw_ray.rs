@@ -1,8 +1,8 @@
-use bevy_ecs::system::{ResMut, Resource, Res};
+use bevy_ecs::system::{ResMut, Resource, Res, Query};
 use glam::Vec3;
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*, app_resource::App, collision::structs_3d::{OrientedBoundingBox, Ray}, shapes::cube,
+    prelude::*, app_resource::App, collision::structs_3d::{Collider3D, ColliderResult, Ray, OBB}, shapes::cube,
 };
 
 fn main() {
@@ -21,7 +21,7 @@ pub async fn run() {
     let mut instance = Instance {
         ..Default::default()
     };
-    let obb = OrientedBoundingBox::new(2.,2.,2.);
+    let collider = Collider3D::OBB(OBB::new(2., 2., 2.));
     let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
     let mat_idx = asset_server
         .compile_material(
@@ -36,7 +36,7 @@ pub async fn run() {
             true,
         );
     state.world.insert_resource(Mat {idx: mat_idx});
-    state.world.spawn((instance,obb));
+    state.world.spawn((instance,collider));
     state.schedule.add_systems(movement);
     //render loop
     run_event_loop(state, event_loop, Some(default_3d_cam));
@@ -47,15 +47,17 @@ struct Mat {
 }
 fn movement(
     mut app: ResMut<App>,
-    mat: Res<Mat>
+    mat: Res<Mat>,
+    query: Query<(&Instance, &Collider3D)>
 ) {
-    if app.window_events.left_clicked() {
-        let ray = Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction};
-        
-        let collided = OrientedBoundingBox::new(2.,2.,2.).check_collision_with_ray(Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction}, &Instance{..Default::default()});
-        app.draw_ray(ray, 100., mat.idx);
-        if collided.is_some() {
+    for (instance, collider) in &query {
+        if app.window_events.left_clicked() {
+            let ray = Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction};
             
+            let collision = collider.check_collision(Some(instance), &Collider3D::Ray(ray), None);
+            if let ColliderResult::Collision(_dist) = collision {
+                app.draw_ray(ray, 100., mat.idx);
+            }
         }
     }
 }
