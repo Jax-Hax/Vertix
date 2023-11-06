@@ -20,9 +20,9 @@ impl OrientedBoundingBox {
             aabb_max: Vec3::new(x,y,z),
         }
     }
-    pub fn check_collision_with_ray(&self, ray: Ray, instance: &Instance) -> (bool,f32) {
+    pub fn check_collision_with_ray(&self, ray: Ray, instance: &Instance) -> Option<f32> {
         if !instance.enabled {
-            return (false,0.0);
+            return None;
         }
         let model_matrix = instance.to_raw().unwrap().model;
         /*if sphere_with_ray_collision(ray.origin, ray.direction, 2., Vec3::new(0., 0., 0.)){

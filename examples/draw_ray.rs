@@ -1,4 +1,4 @@
-use bevy_ecs::system::{Query, ResMut, Resource, Res};
+use bevy_ecs::system::{ResMut, Resource, Res};
 use glam::Vec3;
 use vertix::{
     camera::{default_3d_cam, Camera},
@@ -52,8 +52,8 @@ fn movement(
     if app.window_events.left_clicked() {
         let ray = Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction};
         
-        let (collided,_) = OrientedBoundingBox::new(2.,2.,2.).check_collision_with_ray(Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction}, &Instance{..Default::default()});
-        if collided {
+        let collided = OrientedBoundingBox::new(2.,2.,2.).check_collision_with_ray(Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction}, &Instance{..Default::default()});
+        if collided.is_some() {
             app.draw_ray(ray, 100., mat.idx);
         }
     }
