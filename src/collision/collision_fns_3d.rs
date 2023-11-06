@@ -113,14 +113,14 @@ pub fn sphere_with_ray_collision(
     ray_direction: Vec3,
     sphere_radius: f32,
     sphere_center: Vec3,
-) -> bool {
+) -> Option<f32> {
     let delta = ray_origin - sphere_center;
 
     let b = delta.dot(ray_direction);
     let c = delta.dot(delta) - sphere_radius * sphere_radius;
     let h = b * b - c;
     if h < 0.0 {
-        return false;
+        return None;
     } // no intersection
-    true
+    Some(0.0)
 }
