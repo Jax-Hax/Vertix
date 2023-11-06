@@ -1,4 +1,4 @@
-use glam::Vec2;
+use glam::{Vec2, Vec3};
 
 use crate::prelude::Vertex;
 
@@ -10,6 +10,17 @@ pub fn rect(height: f32, width: f32) -> (Vec<Vertex>, Vec<u32>) {
         Vertex::new([-x,y, 0.0],[0.0,0.0]),
         Vertex::new([x,-y, 0.0],[1.0,1.0]),
         Vertex::new([x,y, 0.0],[1.0, 0.0]),
+    ];
+    
+    let indices = vec![2,1,0, 1, 2, 3];
+    (vertices,indices)
+}
+pub fn line_3d(p1: Vec3, p2: Vec3) -> (Vec<Vertex>, Vec<u32>){
+    let vertices = vec![
+        Vertex::new([p2.x,p2.y, p2.z], [0.0,1.0]),
+        Vertex::new([p2.x+1.,p1.y, p1.z],[0.0,0.0]),
+        Vertex::new([p1.x,p2.y, p1.z],[1.0,1.0]),
+        Vertex::new([p1.x+1.,p1.y, p1.z],[1.0, 0.0]),
     ];
     
     let indices = vec![2,1,0, 1, 2, 3];

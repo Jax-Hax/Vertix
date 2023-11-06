@@ -2,7 +2,7 @@ use bevy_ecs::system::Resource;
 use glam::Vec3;
 use winit::dpi::PhysicalPosition;
 
-use crate::{assets::AssetServer, camera::CameraStruct, resources::WindowEvents, shapes::rect, collision::structs_3d::Ray, prelude::Instance};
+use crate::{assets::AssetServer, camera::CameraStruct, resources::WindowEvents, shapes::line_3d, collision::structs_3d::Ray, prelude::Instance};
 
 #[derive(Resource)]
 pub struct App {
@@ -22,6 +22,6 @@ impl App {
         self.draw_line_segment(line_segment_start, line_segment_end, material_idx);
     }
     pub fn draw_line_segment(&mut self, line_start: Vec3, line_end: Vec3, material_idx: usize) {
-        self.asset_server.build_mesh(rect(10.,10.), vec![&mut Instance {..Default::default()}], material_idx, false)
+        self.asset_server.build_mesh(line_3d(line_start, line_end), vec![&mut Instance {..Default::default()}], material_idx, false)
     }
 }
