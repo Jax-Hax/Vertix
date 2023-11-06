@@ -2,7 +2,7 @@ use bevy_ecs::system::{Query, ResMut};
 use glam::Vec3;
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*, app_resource::App, collision::structs_3d::OrientedBoundingBox,
+    prelude::*, app_resource::App, collision::structs_3d::{OrientedBoundingBox, Ray},
 };
 
 fn main() {
@@ -46,7 +46,7 @@ fn movement(
     for (instance,obb) in &mut query {
         let instance_raw = instance.to_raw();
         if instance_raw.is_some() {
-            let (is_collided,_collision_dist) = obb.check_collision_with_ray(app.camera.camera_transform.position, app.window_events.mouse_ray_direction, &temp_instance);
+            let (is_collided,_collision_dist) = obb.check_collision_with_ray(Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction}, &temp_instance);
             if is_collided {
                 println!("trueee");
             }
