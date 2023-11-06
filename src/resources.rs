@@ -11,7 +11,6 @@ pub struct WindowEvents {
     pub middle_mouse: MouseClickType,
     pub aspect_ratio: f32,
     pub mouse_ray_direction: Vec3,
-    pub mouse_ray_orgin: Vec3,
 }
 pub enum MouseClickType{
     Clicked,
@@ -88,7 +87,6 @@ impl WindowEvents {
         ray_wor_end /= ray_wor_end.w;
         let ray_dir_world = (ray_wor_end - ray_wor_start).normalize();
         self.mouse_ray_direction = vec3(-ray_dir_world.x, -ray_dir_world.y, -ray_dir_world.z);
-        //self.mouse_ray_orgin = vec3(lRayStart_world);
     }
 }
 pub struct Timer {

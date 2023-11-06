@@ -51,6 +51,10 @@ fn movement(
 ) {
     if app.window_events.left_clicked() {
         let ray = Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction};
-        app.draw_ray(ray, 10., mat.idx);
+        
+        let (collided,_) = OrientedBoundingBox::new(2.,2.,2.).check_collision_with_ray(Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction}, &Instance{..Default::default()});
+        if collided {
+            app.draw_ray(ray, 100., mat.idx);
+        }
     }
 }
