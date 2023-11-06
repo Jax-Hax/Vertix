@@ -137,7 +137,6 @@ impl Window {
     pub fn normalize_position(&self, pos: &PhysicalPosition<f64>) -> PhysicalPosition<f32>{ 
         let normalized_x = ((2.0 * pos.x as f32) / self.size.width as f32) - 1.0; //normalize to be between -1 and 1 instead of 0-1
         let normalized_y = 1.0 - ((2.0 * pos.y as f32) / self.size.height as f32); //normalize to be between -1 and 1 as well as flip
-        println!("{},{}",normalized_x,normalized_y);
         PhysicalPosition { x: normalized_x, y: normalized_y }
     }
 }
