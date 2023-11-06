@@ -78,8 +78,8 @@ impl WindowEvents {
         self.aspect_ratio = (width as f32) /(height as f32);
     }
     pub fn calculate_mouse_dir(&mut self, proj_matrix: &Projection, view_matrix: &[[f32; 4]; 4]) {
-        let ray_clip_start = Vec4::new(self.screen_mouse_pos.x, self.screen_mouse_pos.y, -1.0, 1.0); //screen mosue pos is (-1,-1) to (1,1)
-        let ray_clip_end = Vec4::new(self.screen_mouse_pos.x, self.screen_mouse_pos.y, 0.0, 1.0); //screen mosue pos is (-1,-1) to (1,1)
+        let ray_clip_start = Vec4::new(-self.screen_mouse_pos.x, -self.screen_mouse_pos.y, -1.0, 1.0); //screen mosue pos is (-1,-1) to (1,1)
+        let ray_clip_end = Vec4::new(-self.screen_mouse_pos.x, -self.screen_mouse_pos.y, 0.0, 1.0); //screen mosue pos is (-1,-1) to (1,1)
         let view_mat = Mat4::from_cols_array_2d(&view_matrix);
         let inversed_view_and_proj_m = (proj_matrix.calc_matrix() * view_mat).inverse();
         let mut ray_wor_start = inversed_view_and_proj_m * ray_clip_start;
@@ -87,7 +87,7 @@ impl WindowEvents {
         let mut ray_wor_end = inversed_view_and_proj_m * ray_clip_end;
         ray_wor_end /= ray_wor_end.w;
         let ray_dir_world = (ray_wor_end - ray_wor_start).normalize();
-        self.mouse_ray_direction = vec3(ray_dir_world.x, ray_dir_world.y, ray_dir_world.z);
+        self.mouse_ray_direction = vec3(-ray_dir_world.x, -ray_dir_world.y, -ray_dir_world.z);
         //self.mouse_ray_orgin = vec3(lRayStart_world);
     }
 }

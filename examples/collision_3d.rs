@@ -2,7 +2,7 @@ use bevy_ecs::system::{Query, ResMut};
 use glam::Vec3;
 use vertix::{
     camera::{default_3d_cam, Camera},
-    prelude::*, app_resource::App, collision::structs_3d::{OrientedBoundingBox, Ray},
+    prelude::*, app_resource::App, collision::structs_3d::{OrientedBoundingBox, Ray}, shapes::cube,
 };
 
 fn main() {
@@ -23,13 +23,18 @@ pub async fn run() {
             };
     let obb = OrientedBoundingBox::new(2.,2.,2.);
     let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
-    asset_server
-        .create_model_instances(
-            "cube.obj",
-            vec![&mut instance],
-            true,
+    let mat_idx = asset_server
+        .compile_material(
+            "cube-diffuse.jpg"
         )
         .await;
+    asset_server
+        .build_mesh(
+            cube(),
+            vec![&mut instance],
+            mat_idx,
+            true,
+        );
     state.world.spawn((instance,obb));
     state.schedule.add_systems(movement);
     //render loop
