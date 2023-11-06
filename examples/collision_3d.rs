@@ -46,7 +46,7 @@ fn movement(
     for (instance,obb) in &mut query {
         let instance_raw = instance.to_raw();
         if instance_raw.is_some() {
-            let (is_collided,_collision_dist) = obb.check_collision_with_ray(app.camera.camera_transform.position, app.window_events.mouse_dir_ray, &temp_instance);
+            let (is_collided,_collision_dist) = obb.check_collision_with_ray(app.camera.camera_transform.position, app.window_events.mouse_ray_direction, &temp_instance);
             if is_collided {
                 println!("trueee");
             }

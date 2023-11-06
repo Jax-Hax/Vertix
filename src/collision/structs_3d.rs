@@ -25,11 +25,11 @@ impl OrientedBoundingBox {
             return (false,0.0);
         }
         let model_matrix = instance.to_raw().unwrap().model;
-        /*if sphere_with_ray_collision(ray_origin, ray_direction, 2., Vec3::new(0., 0., 0.)){
+        if sphere_with_ray_collision(ray_origin, ray_direction, 2., Vec3::new(0., 0., 0.)){
             return (true,-1.)
         }
-        (false,0.)*/
-        oriented_bounding_box_with_ray(ray_origin, ray_direction, self.aabb_min, self.aabb_max, model_matrix)
+        (false,0.)
+        //oriented_bounding_box_with_ray(ray_origin, ray_direction, self.aabb_min, self.aabb_max, model_matrix)
     }
 }
 #[derive(Component,Resource)]

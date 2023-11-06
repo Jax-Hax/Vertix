@@ -133,7 +133,8 @@ impl State {
             right_mouse: MouseClickType::NotHeld,
             middle_mouse: MouseClickType::NotHeld,
             aspect_ratio: (config.width as f32) / (config.height as f32),
-            mouse_dir_ray: Vec3::ZERO,
+            mouse_ray_direction: Vec3::ZERO,
+            mouse_ray_orgin: Vec3::ZERO,
         };
         window_events.calculate_mouse_dir(&camera.projection, &camera.camera_uniform.view_proj);
         world.insert_resource(App {asset_server, dt: Duration::ZERO,window_events, camera});

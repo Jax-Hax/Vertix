@@ -27,7 +27,7 @@ pub fn oriented_bounding_box_with_ray(
     if t2 < t_max {t_max = t2;}
     // tMin is the farthest "near" intersection (amongst the X,Y and Z planes pairs)
     if t1 > t_min {t_min = t1;}
-    println!("x: {},{}, {}", t_max, t_min, t_max < t_min);
+    //println!("x: {},{}, {}", t_max, t_min, t_max < t_min);
     if t_max < t_min {
         return (false,0.);
     }
@@ -49,7 +49,7 @@ pub fn oriented_bounding_box_with_ray(
     if t2 < t_max {t_max = t2;}
     // tMin is the farthest "near" intersection (amongst the X,Y and Z planes pairs)
     if t1 > t_min {t_min = t1;}
-    println!("y: {},{}, {}", t_max, t_min, t_max < t_min);
+    //println!("y: {},{}, {}", t_max, t_min, t_max < t_min);
     if t_max < t_min {
         return (false,0.);
     }
@@ -71,7 +71,7 @@ pub fn oriented_bounding_box_with_ray(
     if t2 < t_max {t_max = t2;}
     // tMin is the farthest "near" intersection (amongst the X,Y and Z planes pairs)
     if t1 > t_min {t_min = t1;}
-    println!("z: {},{}, {}", t_max, t_min, t_max < t_min);
+    //println!("z: {},{}, {}", t_max, t_min, t_max < t_min);
     if t_max < t_min {
         return (false,0.);
     }
@@ -83,7 +83,6 @@ pub fn sphere_with_ray_collision(ray_origin: Vec3, ray_direction: Vec3, sphere_r
     let b = delta.dot(ray_direction);
     let c = delta.dot(delta) - sphere_radius*sphere_radius;
     let h = b*b - c;
-    println!("h: {:#?}", h);
     if h<0.0 {return false;} // no intersection
     true
 }
