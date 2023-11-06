@@ -2,9 +2,9 @@ use glam::{Vec2, Vec3};
 
 use crate::prelude::Vertex;
 
-pub fn rect(height: f32, width: f32) -> (Vec<Vertex>, Vec<u32>) {
-    let y = height/2.;
-    let x = width/2.;
+pub fn rect(x_width: f32, y_height: f32) -> (Vec<Vertex>, Vec<u32>) {
+    let y = y_height/2.;
+    let x = x_width/2.;
     let vertices = vec![
         Vertex::new([-x,-y, 0.0], [0.0,1.0]),
         Vertex::new([-x,y, 0.0],[0.0,0.0]),
@@ -39,7 +39,10 @@ pub fn rect_with_tex_coords(height: f32, width: f32, tex_1: Vec2, tex_2: Vec2) -
     let indices = vec![2,1,0, 1, 2, 3];
     (vertices,indices)
 }
-pub fn cube() -> (Vec<Vertex>, Vec<u32>) {
+pub fn cube(x_width: f32, y_height: f32, z_length: f32) -> (Vec<Vertex>, Vec<u32>) {
+    let x = x_width/2.;
+    let y = y_height/2.;
+    let z = z_length/2.;
     let indices = vec![
         //Top
         7, 6, 2,
@@ -68,14 +71,14 @@ pub fn cube() -> (Vec<Vertex>, Vec<u32>) {
 
 
     let vertices = vec![
-        Vertex::new([-1.,-1., 0.5], [0.0,0.0]),
-        Vertex::new([1.,-1., 0.5], [0.0,0.0]),
-        Vertex::new([-1.,1., 0.5], [0.0,0.0]),
-        Vertex::new([1.,1., 0.5], [0.0,0.0]),
-        Vertex::new([-1.,-1., -0.5], [0.0,0.0]),
-        Vertex::new([1.,-1., -0.5], [0.0,0.0]),
-        Vertex::new([-1.,1., -0.5], [0.0,0.0]),
-        Vertex::new([1.,1., -0.5], [0.0,0.0]),
+        Vertex::new([-x,-y, z], [0.0,0.0]),
+        Vertex::new([x,-y, z], [0.0,0.0]),
+        Vertex::new([-x,y, z], [0.0,0.0]),
+        Vertex::new([x,y, z], [0.0,0.0]),
+        Vertex::new([-x,-y, -z], [0.0,0.0]),
+        Vertex::new([x,-y, -z], [0.0,0.0]),
+        Vertex::new([-x,y, -z], [0.0,0.0]),
+        Vertex::new([x,y, -z], [0.0,0.0]),
     ];
     (vertices,indices)
 }

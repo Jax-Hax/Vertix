@@ -30,7 +30,7 @@ pub async fn run() {
         .await;
     asset_server
         .build_mesh(
-            cube(),
+            cube(2.,2.,2.),
             vec![&mut instance],
             mat_idx,
             true,
@@ -48,12 +48,12 @@ fn movement(
     let mut temp_instance = Instance {
         ..Default::default()
     };
-    for (instance,obb) in &mut query {
+    for (mut instance,obb) in &mut query {
         let instance_raw = instance.to_raw();
         if instance_raw.is_some() {
             let (is_collided,_collision_dist) = obb.check_collision_with_ray(Ray {origin: app.camera.camera_transform.position, direction: app.window_events.mouse_ray_direction}, &temp_instance);
             if is_collided {
-                println!("trueee");
+                instance.position.x += 0.1;
             }
             else {
                 println!("not truee");
