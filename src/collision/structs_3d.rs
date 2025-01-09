@@ -16,7 +16,7 @@ impl Collider3D {
         &self,
         parent_instance: Option<&Instance>,
         other: &Self,
-        other_instance: Option<&Instance>,
+        _other_instance: Option<&Instance>,
     ) -> ColliderResult {
         match self {
             Collider3D::OBB(obb) => match other {

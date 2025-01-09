@@ -205,7 +205,7 @@ impl State {
                 let mut app = self.world
                     .get_resource_mut::<App>()
                     .unwrap();
-                let mut events = &mut app.window_events;
+                let events = &mut app.window_events;
                 match button {
                     MouseButton::Left => {
                         events.left_mouse = if *state == ElementState::Pressed {

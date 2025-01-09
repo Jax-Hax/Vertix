@@ -61,9 +61,10 @@ pub async fn load_texture(
     build_path: &str,
     device: &wgpu::Device,
     queue: &wgpu::Queue,
+    filter_type: wgpu::FilterMode
 ) -> anyhow::Result<texture::Texture> {
     let data = load_binary(file_name, build_path).await?;
-    texture::Texture::from_bytes(device, queue, &data, file_name)
+    texture::Texture::from_bytes(device, queue, &data, file_name, filter_type)
 }
 
 pub async fn load_model(
@@ -93,7 +94,7 @@ pub async fn load_model(
 
     let mut materials = Vec::new();
     for m in obj_materials? {
-        let diffuse_texture = load_texture(&m.diffuse_texture, build_path, device, queue).await?;
+        let diffuse_texture = load_texture(&m.diffuse_texture, build_path, device, queue, wgpu::FilterMode::Linear).await?;
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout,
             entries: &[

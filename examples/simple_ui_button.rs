@@ -26,7 +26,7 @@ pub async fn run() {
     let mut instances = vec![];
     instances.push(&mut instance);
     let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
-    let material_idx = asset_server.compile_material("rounded_rect.png").await;
+    let material_idx = asset_server.compile_material("rounded_rect.png", wgpu::FilterMode::Linear).await;
     asset_server.build_mesh(
         rect(1.,1.),
         instances,

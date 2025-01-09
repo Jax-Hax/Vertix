@@ -13,7 +13,7 @@ pub async fn run() {
     let mut instances = vec![];
     let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
     instances.push(&mut instance);
-    let material_idx = asset_server.compile_material("cube-diffuse.jpg").await;
+    let material_idx = asset_server.compile_material("cube-diffuse.jpg", wgpu::FilterMode::Linear).await;
     asset_server.make_sprites(
         instances,
         material_idx,

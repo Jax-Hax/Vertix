@@ -155,7 +155,7 @@ impl Projection {
 
 pub fn default_3d_cam(state: &mut State, dt: Duration) {
     let dt = dt.as_secs_f32();
-    let mut cam = &mut state.world
+    let cam = &mut state.world
                 .get_resource_mut::<App>()
                 .unwrap().camera;
     // Move forward/backward and left/right

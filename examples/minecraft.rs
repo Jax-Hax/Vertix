@@ -37,7 +37,7 @@ pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state, event_loop) = State::new(true, env!("OUT_DIR"), camera, 5.0, 2.0).await;
     let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
-    let atlas_idx = asset_server.compile_material("texture_atlas.png").await;
+    let atlas_idx = asset_server.compile_material("texture_atlas.png", wgpu::FilterMode::Nearest).await;
     //add models
     create_terrain(&mut state, atlas_idx);
     //render loop

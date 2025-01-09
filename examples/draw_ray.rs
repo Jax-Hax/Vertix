@@ -25,7 +25,8 @@ pub async fn run() {
     let asset_server = &mut state.world.get_resource_mut::<App>().unwrap().asset_server;
     let mat_idx = asset_server
         .compile_material(
-            "cube-diffuse.jpg"
+            "cube-diffuse.jpg",
+            wgpu::FilterMode::Linear
         )
         .await;
     asset_server

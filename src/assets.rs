@@ -49,21 +49,21 @@ impl AssetServer {
     pub fn clear_all_prefabs(&mut self) {
         self.prefab_slab.clear();
     }
-    pub async fn compile_materials(&mut self, material_paths: Vec<&str>) -> Vec<usize> {
+    pub async fn compile_materials(&mut self, material_paths: Vec<&str>, filter_type: wgpu::FilterMode) -> Vec<usize> {
         let mut material_idxs = vec![];
         for material_path in material_paths {
-            self.material_assets.push(self.compile_material_internal(&material_path).await);
+            self.material_assets.push(self.compile_material_internal(&material_path, filter_type).await);
             material_idxs.push(self.material_assets.len() - 1);
         }
         material_idxs
     }
-    pub async fn compile_material(&mut self, material_path: &str) -> usize {
-        self.material_assets.push(self.compile_material_internal(&material_path).await);
+    pub async fn compile_material(&mut self, material_path: &str, filter_type: wgpu::FilterMode) -> usize {
+        self.material_assets.push(self.compile_material_internal(&material_path, filter_type).await);
         self.material_assets.len() - 1
     }
-    async fn compile_material_internal(&self, texture_name: &str) -> Material {
+    async fn compile_material_internal(&self, texture_name: &str, filter_type: wgpu::FilterMode) -> Material {
         let diffuse_texture =
-            load_texture(texture_name, &self.build_path, &self.device, &self.queue)
+            load_texture(texture_name, &self.build_path, &self.device, &self.queue, filter_type)
                 .await
                 .unwrap();
         let texture_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
